@@ -1,9 +1,9 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace OID.SoapDataProvider.HashGenerator
+namespace OID.Core.HashGenerator
 {
-    public class HashGenerator: IHashGenerator
+    public class HashGenerator : IHashGenerator
     {
         public string Generate(string input, bool hexString)
         {

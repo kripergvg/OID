@@ -55,7 +55,7 @@ namespace OID.SoapDataProvider.Providers
 
         public async Task<DataProviderModel<SessionModel>> UpdateUser(UserModel userModel, UserProfileModel oldProfile, UserProfileModel newProfile)
         {
-            string queryIdentifier = Guid.NewGuid().ToString();
+            var queryIdentifier = Guid.NewGuid().ToString();
             var query = new Query(queryIdentifier, "UpdateUser");
 
             if ((newProfile.LastName ?? "") != (oldProfile.LastName ?? ""))
@@ -95,12 +95,12 @@ namespace OID.SoapDataProvider.Providers
         }
 
         public async Task<DataProviderModel<SessionModel>> ChangePassword(UserModel userModel, string oldPasswordHash, string newPasswordHash)
-        {       
-            string queryIdentifier = Guid.NewGuid().ToString();
+        {
+            var queryIdentifier = Guid.NewGuid().ToString();
             var query = new Query(queryIdentifier, "UpdateUser_ChangePassword");
-            
+
             query.Parameters.Add(new QueryParameter("in", "OldPasswordHash", oldPasswordHash, SqlDbType.NVarChar));
-            query.Parameters.Add(new QueryParameter("in", "NewPasswordHash", newPasswordHash, SqlDbType.NVarChar));            
+            query.Parameters.Add(new QueryParameter("in", "NewPasswordHash", newPasswordHash, SqlDbType.NVarChar));
 
             var result = await _sessionQueryExecutor.Execute(new List<Query>
             {
@@ -115,6 +115,116 @@ namespace OID.SoapDataProvider.Providers
             {
                 return new DataProviderModel<SessionModel>(result.ResultMessage, null);
             }
+        }
+
+        public async Task<DataProviderModel<SessionModel>> UpsertUserContacts(UserModel userModel, UserContactsModel oldContacts, UserContactsModel newContacts)
+        {
+            var queries = new List<Query>();
+
+            GetPhoneSaveQuery(newContacts.PhoneMobile, oldContacts.PhoneMobile, "Mobile", queries);
+            GetPhoneSaveQuery(newContacts.PhoneWork, oldContacts.PhoneWork, "Work", queries);
+            GetPhoneSaveQuery(newContacts.PhoneHome, oldContacts.PhoneHome, "Home", queries);
+            GetPhoneSaveQuery(newContacts.PhoneAdditional, oldContacts.PhoneAdditional, "Additional", queries);
+
+            if ((newContacts.DeliveryLocationType == "City" && newContacts.CityCode != null)
+                || (newContacts.DeliveryLocationType == "Location" && newContacts.LocalityCode != null)
+                || !String.IsNullOrWhiteSpace(newContacts.Address))
+            {
+                var queryIdentifier = Guid.NewGuid().ToString();
+                var q1 = new Query(queryIdentifier, "UpdateUser");
+
+                q1.Parameters.Add(!string.IsNullOrEmpty(newContacts.Address)
+                    ? new QueryParameter("in", "Address", newContacts.Address, SqlDbType.NVarChar)
+                    : new QueryParameter("in", "Address", "", SqlDbType.NVarChar));
+
+                if (newContacts.DeliveryLocationType == "City" && newContacts.CityCode != null)
+                {
+                    q1.Parameters.Add(new QueryParameter("in", "CityCode", newContacts.CityCode, SqlDbType.NVarChar));
+                }
+
+                if (newContacts.DeliveryLocationType == "Location" && newContacts.LocalityCode != null)
+                {
+                    q1.Parameters.Add(new QueryParameter("in", "CityCode", newContacts.LocationCode, SqlDbType.NVarChar));
+                }
+
+                queries.Add(q1);
+            }
+
+            var result = await _sessionQueryExecutor.Execute(queries, userModel).ConfigureAwait(false);
+
+            return new DataProviderModel<SessionModel>(result.ResultMessage, new SessionModel(result.SessionId));
+        }
+
+        public async Task<DataProviderModel<SessionModel>> UpsertAccounts(UserModel userModel, IList<Account> accounts)
+        {
+            var listQuery = new List<Query>();
+
+            foreach (var acc in accounts)
+            {
+                if (acc.AccountId == null || acc.Deleted)
+                {
+                    listQuery.Add(AccountToQuery(acc));
+                }
+            }
+
+            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+
+            return new DataProviderModel<SessionModel>(result.ResultMessage, new SessionModel(result.SessionId));
+        }
+
+        private static Query AccountToQuery(Account acc)
+        {
+            var queryIdentifier = Guid.NewGuid().ToString();
+            Query query;
+
+            if (acc.Deleted)
+            {
+                query = new Query(queryIdentifier, "DeleteUserAccount");
+                query.Parameters.Add(new QueryParameter("in", "UserAccount_Id", acc.UserAccountId, SqlDbType.Int));
+            }
+            else
+            {
+                query = new Query(queryIdentifier, "InsertUserAccount");
+                query.Parameters.Add(new QueryParameter("in", "CptyService_Id", acc.PaymentCptyServiceId, SqlDbType.Int));
+                query.Parameters.Add(new QueryParameter("in", "AccountNumber", acc.AccountNumber, SqlDbType.NVarChar));
+            }
+
+            return query;
+        }
+
+        private List<Query> GetPhoneSaveQuery(UserContactsModel.UserPhone phone, UserContactsModel.UserPhone old_phone, string PhoneType, List<Query> listQuery)
+        {
+            var guid = Guid.NewGuid().ToString();
+
+            if (phone != null)
+            {
+                if (old_phone != null && String.IsNullOrWhiteSpace(phone.Number))
+                {
+                    //Delete phone
+                    var q2 = new Query(guid, "DeleteUserPhone");
+                    q2.Parameters.Add(new QueryParameter("in", "PhoneType_Name", PhoneType, SqlDbType.NVarChar));
+                    q2.Parameters.Add(new QueryParameter("in", "PhoneNumber", GetPhoneOnlyDigits(old_phone.Number), SqlDbType.Int));
+
+                    listQuery.Add(q2);
+                }
+                else if (!String.IsNullOrWhiteSpace(phone.Number))
+                {
+                    var q1 = new Query(guid, "UpsertUserPhone");
+                    q1.Parameters.Add(new QueryParameter("in", "PhoneType_Name", PhoneType, SqlDbType.NVarChar));
+                    q1.Parameters.Add(new QueryParameter("in", "PhoneNumber", GetPhoneOnlyDigits(phone.Number), SqlDbType.Int));
+                    q1.Parameters.Add(new QueryParameter("in", "Comment", phone.Comment, SqlDbType.NVarChar));
+
+                    listQuery.Add(q1);
+
+                }
+            }
+
+            return listQuery;
+        }
+
+        private static string GetPhoneOnlyDigits(string s)
+        {
+            return s.Replace("(", "").Replace(")", "").Replace("-", "").Replace(" ", "").Replace("+", "");
         }
     }
 }

@@ -2,7 +2,9 @@
   "version": "1.0.0-*",
 
   "dependencies": {
+    "Autofac": "4.2.0",
     "NETStandard.Library": "1.6.0",
+    "OID.Core": "1.0.0-*",
     "OID.DataProvider.Interfaces": "1.0.0-*",
     "OID.DataProvider.Models": "1.0.0-*"
   },

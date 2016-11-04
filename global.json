@@ -1,5 +1,5 @@
 {
-  "projects": [ "src", "test", "src/OID.DataProvider" ],
+  "projects": [ "src", "test", "src/OID.DataProvider", "." ],
   "sdk": {
     "version": "1.0.0-preview2-003131"
   }

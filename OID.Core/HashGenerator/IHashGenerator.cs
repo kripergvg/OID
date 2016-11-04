@@ -1,4 +1,4 @@
-﻿namespace OID.SoapDataProvider.HashGenerator
+﻿namespace OID.Core.HashGenerator
 {
     public interface IHashGenerator
     {

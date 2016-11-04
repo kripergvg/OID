@@ -87,7 +87,7 @@ namespace OID.SoapDataProvider
         //#region CallServices
 
         public async Task<DataProviderModel<AuthModel>> CallAuthSession(string email, string password)
-        {          
+        {
             List<Query> listQuery = new List<Query>();
 
             string q_guid = Guid.NewGuid().ToString();
@@ -100,7 +100,7 @@ namespace OID.SoapDataProvider
 
             string result = await _serviceClient.PostAsync(ExecuteQueriesInTechnicalSession(listQuery));
 
-            string message=String.Empty;
+            string message = String.Empty;
             string code = "";
             List<Query> listResults = ParseQueryXml(result, "result", ref code, ref message);
 
