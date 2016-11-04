@@ -10,6 +10,7 @@ namespace OID.Frontend.Controllers
     {
         public IActionResult Index()
         {
+            ViewBag.test = "test";
             return View();
         }
 

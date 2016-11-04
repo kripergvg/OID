@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://www.oplataidostavka.ru/DataProvider/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" targetNamespace="http://www.oplataidostavka.ru/DataProvider/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Provide queries from app to db</wsdl:documentation>
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://www.oplataidostavka.ru/DataProvider/">
+      <s:element name="Query">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="queryAsXml" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="QueryResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="QueryResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="string" nillable="true" type="s:string" />
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="QuerySoapIn">
+    <wsdl:part name="parameters" element="tns:Query" />
+  </wsdl:message>
+  <wsdl:message name="QuerySoapOut">
+    <wsdl:part name="parameters" element="tns:QueryResponse" />
+  </wsdl:message>
+  <wsdl:message name="QueryHttpGetIn">
+    <wsdl:part name="queryAsXml" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="QueryHttpGetOut">
+    <wsdl:part name="Body" element="tns:string" />
+  </wsdl:message>
+  <wsdl:message name="QueryHttpPostIn">
+    <wsdl:part name="queryAsXml" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="QueryHttpPostOut">
+    <wsdl:part name="Body" element="tns:string" />
+  </wsdl:message>
+  <wsdl:portType name="DataProviderSoap">
+    <wsdl:operation name="Query">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Query</wsdl:documentation>
+      <wsdl:input message="tns:QuerySoapIn" />
+      <wsdl:output message="tns:QuerySoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:portType name="DataProviderHttpGet">
+    <wsdl:operation name="Query">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Query</wsdl:documentation>
+      <wsdl:input message="tns:QueryHttpGetIn" />
+      <wsdl:output message="tns:QueryHttpGetOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:portType name="DataProviderHttpPost">
+    <wsdl:operation name="Query">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Query</wsdl:documentation>
+      <wsdl:input message="tns:QueryHttpPostIn" />
+      <wsdl:output message="tns:QueryHttpPostOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="DataProviderSoap" type="tns:DataProviderSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Query">
+      <soap:operation soapAction="http://www.oplataidostavka.ru/DataProvider/Query" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="DataProviderSoap12" type="tns:DataProviderSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Query">
+      <soap12:operation soapAction="http://www.oplataidostavka.ru/DataProvider/Query" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="DataProviderHttpGet" type="tns:DataProviderHttpGet">
+    <http:binding verb="GET" />
+    <wsdl:operation name="Query">
+      <http:operation location="/Query" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="DataProviderHttpPost" type="tns:DataProviderHttpPost">
+    <http:binding verb="POST" />
+    <wsdl:operation name="Query">
+      <http:operation location="/Query" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="DataProvider">
+    <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Provide queries from app to db</wsdl:documentation>
+    <wsdl:port name="DataProviderSoap" binding="tns:DataProviderSoap">
+      <soap:address location="http://oplataidostavka.ru/DealWithDelivery/DataProvider.asmx" />
+    </wsdl:port>
+    <wsdl:port name="DataProviderSoap12" binding="tns:DataProviderSoap12">
+      <soap12:address location="http://oplataidostavka.ru/DealWithDelivery/DataProvider.asmx" />
+    </wsdl:port>
+    <wsdl:port name="DataProviderHttpGet" binding="tns:DataProviderHttpGet">
+      <http:address location="http://oplataidostavka.ru/DealWithDelivery/DataProvider.asmx" />
+    </wsdl:port>
+    <wsdl:port name="DataProviderHttpPost" binding="tns:DataProviderHttpPost">
+      <http:address location="http://oplataidostavka.ru/DealWithDelivery/DataProvider.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

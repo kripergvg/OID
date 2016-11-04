@@ -1162,7 +1162,7 @@ hr {
 }
 .sr-only-focusable:active,
 .sr-only-focusable:focus {
-  position: static;
+  position: ;
   width: auto;
   height: auto;
   margin: 0;
@@ -2325,13 +2325,13 @@ th {
   background-color: #f5f5f5;
 }
 table col[class*="col-"] {
-  position: static;
+  position: ;
   display: table-column;
   float: none;
 }
 table td[class*="col-"],
 table th[class*="col-"] {
-  position: static;
+  position: ;
   display: table-cell;
   float: none;
 }
@@ -2695,14 +2695,14 @@ fieldset[disabled] .radio label,
 fieldset[disabled] .checkbox label {
   cursor: not-allowed;
 }
-.form-control-static {
+.form-control- {
   min-height: 34px;
   padding-top: 7px;
   padding-bottom: 7px;
   margin-bottom: 0;
 }
-.form-control-static.input-lg,
-.form-control-static.input-sm {
+.form-control-.input-lg,
+.form-control-.input-sm {
   padding-right: 0;
   padding-left: 0;
 }
@@ -2736,7 +2736,7 @@ select[multiple].input-sm {
 .form-group-sm select[multiple].form-control {
   height: auto;
 }
-.form-group-sm .form-control-static {
+.form-group-sm .form-control- {
   height: 30px;
   min-height: 32px;
   padding: 6px 10px;
@@ -2773,7 +2773,7 @@ select[multiple].input-lg {
 .form-group-lg select[multiple].form-control {
   height: auto;
 }
-.form-group-lg .form-control-static {
+.form-group-lg .form-control- {
   height: 46px;
   min-height: 38px;
   padding: 11px 16px;
@@ -2925,7 +2925,7 @@ select[multiple].input-lg {
     width: auto;
     vertical-align: middle;
   }
-  .form-inline .form-control-static {
+  .form-inline .form-control- {
     display: inline-block;
   }
   .form-inline .input-group {
@@ -4211,7 +4211,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
     overflow-y: visible;
   }
   .navbar-fixed-top .navbar-collapse,
-  .navbar-static-top .navbar-collapse,
+  .navbar--top .navbar-collapse,
   .navbar-fixed-bottom .navbar-collapse {
     padding-right: 0;
     padding-left: 0;
@@ -4243,12 +4243,12 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
     margin-left: 0;
   }
 }
-.navbar-static-top {
+.navbar--top {
   z-index: 1000;
   border-width: 0 0 1px;
 }
 @media (min-width: 768px) {
-  .navbar-static-top {
+  .navbar--top {
     border-radius: 0;
   }
 }
@@ -4333,7 +4333,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 }
 @media (max-width: 767px) {
   .navbar-nav .open .dropdown-menu {
-    position: static;
+    position: ;
     float: none;
     width: auto;
     margin-top: 0;
@@ -4389,7 +4389,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
     width: auto;
     vertical-align: middle;
   }
-  .navbar-form .form-control-static {
+  .navbar-form .form-control- {
     display: inline-block;
   }
   .navbar-form .input-group {

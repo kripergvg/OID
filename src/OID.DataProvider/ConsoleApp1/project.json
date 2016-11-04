@@ -1,0 +1,16 @@
+﻿{
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "emitEntryPoint": true
+  },
+  "frameworks": {
+    "net461": {
+      "imports": "dnxcore50"
+    }
+  },
+  "dependencies": {
+    "OID.DataProvider.Interfaces": "1.0.0-*",
+    "OID.DataProvider.Models": "1.0.0-*",
+    "OID.SoapDataProvider": "1.0.0-*"
+  }
+}

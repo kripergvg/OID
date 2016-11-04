@@ -127,25 +127,25 @@ $.extend($.fn, {
 	// http://jqueryvalidation.org/rules/
 	rules: function( command, argument ) {
 		var element = this[ 0 ],
-			settings, staticRules, existingRules, data, param, filtered;
+			settings, Rules, existingRules, data, param, filtered;
 
 		if ( command ) {
 			settings = $.data( element.form, "validator" ).settings;
-			staticRules = settings.rules;
-			existingRules = $.validator.staticRules( element );
+			Rules = settings.rules;
+			existingRules = $.validator.Rules( element );
 			switch ( command ) {
 			case "add":
 				$.extend( existingRules, $.validator.normalizeRule( argument ) );
 				// remove messages from rules, but allow them to be set separately
 				delete existingRules.messages;
-				staticRules[ element.name ] = existingRules;
+				Rules[ element.name ] = existingRules;
 				if ( argument.messages ) {
 					settings.messages[ element.name ] = $.extend( settings.messages[ element.name ], argument.messages );
 				}
 				break;
 			case "remove":
 				if ( !argument ) {
-					delete staticRules[ element.name ];
+					delete Rules[ element.name ];
 					return existingRules;
 				}
 				filtered = {};
@@ -166,7 +166,7 @@ $.extend($.fn, {
 			$.validator.classRules( element ),
 			$.validator.attributeRules( element ),
 			$.validator.dataRules( element ),
-			$.validator.staticRules( element )
+			$.validator.Rules( element )
 		), element );
 
 		// make sure required is at front
@@ -395,7 +395,7 @@ $.extend( $.validator, {
 				$( this.currentForm ).on( "invalid-form.validate", this.settings.invalidHandler );
 			}
 
-			// Add aria-required to any Static/Data/Class required fields before first validation
+			// Add aria-required to any /Data/Class required fields before first validation
 			// Screen readers require this attribute to be present before the initial submission http://www.w3.org/TR/WCAG-TECHS/ARIA2.html
 			$( this.currentForm ).find( "[required], [data-rule-required], .required" ).attr( "aria-required", "true" );
 		},
@@ -1061,7 +1061,7 @@ $.extend( $.validator, {
 		return rules;
 	},
 
-	staticRules: function( element ) {
+	Rules: function( element ) {
 		var rules = {},
 			validator = $.data( element.form, "validator" );
 
