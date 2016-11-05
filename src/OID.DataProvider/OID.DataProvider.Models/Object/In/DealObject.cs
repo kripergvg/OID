@@ -4,7 +4,7 @@ namespace OID.DataProvider.Models.Object.In
 {
     public class DealObject
     {
-        public DealObject(string objectId, string objectCategoryId, string objectStatusId, string objectName, string description, string checkListId)
+        public DealObject(string objectId, string objectCategoryId, string objectStatusId, string objectName, string description, string checkListId, bool deleted)
         {
             ObjectId = objectId;
             ObjectCategoryId = objectCategoryId;
@@ -12,6 +12,7 @@ namespace OID.DataProvider.Models.Object.In
             ObjectName = objectName;
             Description = description;
             CheckListId = checkListId;
+            Deleted = deleted;
         }
 
         public string ObjectId { get; }
@@ -25,6 +26,8 @@ namespace OID.DataProvider.Models.Object.In
         public string Description { get; }
 
         public string CheckListId { get; }
+
+        public bool Deleted { get; set; }
 
         public IEnumerable<DealCheck> CheckList { get; set; }
 

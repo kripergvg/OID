@@ -19,27 +19,5 @@
         public string LocationCode { get; set; }
 
         public string DeliveryLocationType { get; set; }
-
-        public class UserPhone
-        {
-            string _comment;
-
-            public string Comment
-            {
-                get
-                {
-                    return this._comment;
-                }
-                set
-                {
-                    if (Number != null)
-                    {
-                        this._comment = value;
-                    }
-                }
-            }
-
-            public string Number { get; set; }
-        }
     }
 }

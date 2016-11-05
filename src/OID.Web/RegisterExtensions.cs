@@ -1,6 +1,9 @@
 ﻿using Autofac;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using OID.Core;
 using OID.Web.Authenticate;
+using OID.Web.Core.MappingProfiles;
 
 namespace OID.Web
 {
@@ -10,6 +13,11 @@ namespace OID.Web
         {
             builder.RegisterType<HttpContextAccessor>().As<IHttpContextAccessor>();
             builder.RegisterType<UserManager>().As<IUserManager>();
+            builder.RegisterType<SessionUpdater>().As<ISessionUpdater>();
+
+            var config = new MapperConfiguration(expression => expression.AddProfile(new SoapToViewModelProfile()));
+            builder.Register(c => new Mapper(config)).As<IMapper>();
+
             return builder;
         }
     }

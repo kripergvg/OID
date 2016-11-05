@@ -2,7 +2,7 @@
 
 namespace OID.Web.Models
 {
-    public class LoginModel
+    public class LoginModelViewModel
     {
         [Required]
         [EmailAddress]

@@ -1,6 +1,7 @@
 ﻿using System;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OID.Core;
 using OID.SoapDataProvider;
+using OID.Web.Authenticate;
 
 namespace OID.Web
 {
@@ -29,7 +31,12 @@ namespace OID.Web
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             services.AddDistributedMemoryCache();
-            services.AddSession(s => s.IdleTimeout = new TimeSpan(1));
+            services.AddSession(s => s.IdleTimeout = new TimeSpan(0, 1, 0, 0));
+            services.AddSingleton<IAuthorizationHandler, HasSessionHandler>();
+            services.AddAuthorization(o =>
+            {
+                o.AddPolicy("HasSessionID", p => p.Requirements.Add(new SessionRequirement()));
+            });
             services.AddMvc();
 
             var containerBuilder = new ContainerBuilder();
@@ -61,6 +68,12 @@ namespace OID.Web
 
             app.UseStaticFiles();
             app.UseSession();
+            app.UseCookieAuthentication(new CookieAuthenticationOptions
+            {
+                AuthenticationScheme = "SessionId"
+            });
+
+            app.UseOIDAuthroziation();
 
             app.UseMvc(routes =>
             {

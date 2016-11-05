@@ -1,0 +1,52 @@
+﻿@using System.Threading.Tasks
+@using Newtonsoft.Json
+@using OID.Web.Models
+
+@model List<ObjectListViewModel>
+
+@section scripts
+{
+    <script src="js/objectList/ObjectListController.js"></script>
+}
+
+<script>
+    objectList=@Html.Raw(JsonConvert.SerializeObject(Model));
+</script>
+
+<div ng-app="app">
+    <div ng-controller="ObjectListController">
+        <table>
+            <thead>
+                <tr>
+                    <td>Наименование</td>
+                    <td>Описание</td>
+                    <td>Категория объекта</td>
+                    <td>Статус объекта</td>
+                    <td>Заблокирован</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="object in objects">
+                    <td>
+                        {{object.Name}}
+                    </td>
+                    <td>
+                        {{object.Description}}
+                    </td>
+                    <td>
+                        {{object.CategoryName}}
+                    </td>
+                    <td>
+                        {{object.StatusName}}
+                    </td>
+                    <td>
+                        {{object.Blocked}}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

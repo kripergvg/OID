@@ -1,0 +1,34 @@
+﻿@using Microsoft.AspNetCore.Html
+@using Newtonsoft.Json
+@using OID.Web.Core.AlertMessage
+@using Constants = OID.Web.Core.Constants
+
+@functions
+{
+    HtmlString GetClassForMessage(MessageType messageType)
+    {
+        switch (messageType)
+        {
+            case MessageType.Error:
+                return new HtmlString("danger");
+            case MessageType.Warning:
+                return new HtmlString("warning");
+            case MessageType.Success:
+                return new HtmlString("success");
+            case MessageType.Info:
+                return new HtmlString("info");
+            default:
+                throw new ArgumentOutOfRangeException(nameof(messageType), messageType, null);
+        }
+    }
+}
+
+@if (TempData[Constants.ALERT_MESSAGE] != null)
+{
+    var message = JsonConvert.DeserializeObject<Message>(TempData[Constants.ALERT_MESSAGE].ToString());
+    <div class="alert alert-@GetClassForMessage(message.MessageType) alert-dismissible" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        @message.Text
+    </div>
+}
+

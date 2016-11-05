@@ -16,9 +16,12 @@ namespace OID.SoapDataProvider
             builder.RegisterType<QuerySerializator.QuerySerializator>().As<IQuerySerializator>();
             builder.RegisterType<SessionProvider>().As<ISessionProvider>();
             builder.RegisterType<UserProvider>().As<IUserProvider>();
-            builder.RegisterType<UserSessionQueryExecutor>().As<IUserSessionQueryExecutor>();
-            builder.Register(c => new AppQueryExecutor(login, password, c.Resolve<IHashGenerator>(), c.Resolve<IQuerySerializator>(), c.Resolve<ISoapServiceClient>()))
-                .As<IAppQueryExecutor>();
+            builder.RegisterType<DealObjectProvider>().As<IDealObjectProvider>();
+            builder.RegisterType<RegionProvider>().As<IRegionProvider>();
+            builder.RegisterType<UserSessionQueryExecutorDecorator>().As<IUserSessionQueryExecutorDecorator>();
+            builder.Register(c => new AppQueryExecutorDecorator(login, password, c.Resolve<IHashGenerator>(), c.Resolve<IQueryExecutor>()))
+                .As<IAppQueryExecutorDecorator>();
+            builder.RegisterType<QueryExecutor>().As<IQueryExecutor>();
 
             return builder;
         }

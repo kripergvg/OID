@@ -15,6 +15,11 @@ namespace OID.Web.Authenticate
             _session = contextAccessor.HttpContext.Session;
         }
 
+        public UserManager(HttpContext context)
+        {
+            _session = context.Session;
+        }
+
         public void SetUser(UserModel userModel)
         {
             _session.SetString(USER_KEY, JsonConvert.SerializeObject(userModel));
@@ -39,6 +44,16 @@ namespace OID.Web.Authenticate
                 user.SessionId = model.SessionId;
                 SetUser(user);
             }
+        }
+
+        public bool Authenticated()
+        {
+            return GetUser() != null;
+        }
+
+        public void RemoveUser()
+        {
+            _session.Remove(USER_KEY);
         }
     }
 }

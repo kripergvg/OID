@@ -2,6 +2,8 @@
   "dependencies": {
     "Autofac": "4.2.0",
     "Autofac.Extensions.DependencyInjection": "4.0.0",
+    "AutoMapper": "5.1.1",
+    "Microsoft.AspNetCore.Authentication.Cookies": "1.0.0",
     "Microsoft.AspNetCore.Diagnostics": "1.0.0",
     "Microsoft.AspNetCore.Mvc": "1.0.1",
     "Microsoft.AspNetCore.Razor.Tools": {

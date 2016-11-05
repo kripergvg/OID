@@ -7,21 +7,19 @@ using OID.SoapDataProvider.SoapServiceClient;
 
 namespace OID.SoapDataProvider.Providers.Infrastructure
 {
-    internal class AppQueryExecutor : IAppQueryExecutor
+    internal class AppQueryExecutorDecorator : IAppQueryExecutorDecorator
     {
         private readonly string _login;
         private readonly string _password;
         private readonly IHashGenerator _hashGenerator;
-        private readonly IQuerySerializator _querySerializator;
-        private readonly ISoapServiceClient _serviceClient;
+        private readonly IQueryExecutor _executor;
 
-        public AppQueryExecutor(string login, string password, IHashGenerator hashGenerator, IQuerySerializator querySerializator, ISoapServiceClient serviceClient)
+        public AppQueryExecutorDecorator(string login, string password, IHashGenerator hashGenerator, IQueryExecutor executor)
         {
             _login = login;
             _password = password;
             _hashGenerator = hashGenerator;
-            _querySerializator = querySerializator;
-            _serviceClient = serviceClient;
+            _executor = executor;
         }
 
         public async Task<QueryResult> Execute(List<Query> existedQueries)
@@ -48,10 +46,7 @@ namespace OID.SoapDataProvider.Providers.Infrastructure
             lastQuery.ParentQueryGUID.Add(queryIdentifier);
             fulllistQuery.Add(lastQuery);
 
-            var serializedQueries = _querySerializator.ToStringXml(fulllistQuery);
-            var response = await _serviceClient.PostAsync(serializedQueries).ConfigureAwait(false);
-            var queries = _querySerializator.ToQueryList(response);
-
+            var queries = await _executor.Execute(fulllistQuery).ConfigureAwait(false);
             return queries;
         }
     }

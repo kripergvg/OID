@@ -1,15 +1,13 @@
 ﻿namespace OID.DataProvider.Models.Object
 {
-    public class UpsertObjectModel : ISessionModel
+    public class UpsertObjectModel 
     {
-        public UpsertObjectModel(string objectId, string sessionId)
+        public UpsertObjectModel(string objectId)
         {
             ObjectId = objectId;
-            SessionId = sessionId;
         }
 
         public string ObjectId { get; }
-
-        public string SessionId { get; }
+        
     }
 }

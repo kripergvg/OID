@@ -1,21 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using OID.DataProvider.Interfaces;
 using OID.DataProvider.Models;
 using OID.DataProvider.Models.User;
 using OID.DataProvider.Models.User.In;
 using OID.SoapDataProvider.Providers.Infrastructure;
+using UserModel = OID.DataProvider.Models.UserModel;
 
 namespace OID.SoapDataProvider.Providers
 {
     public class UserProvider : IUserProvider
     {
-        private readonly IUserSessionQueryExecutor _sessionQueryExecutor;
-        private readonly IAppQueryExecutor _appQueryExecutor;
+        private readonly IUserSessionQueryExecutorDecorator _sessionQueryExecutor;
+        private readonly IAppQueryExecutorDecorator _appQueryExecutor;
 
-        public UserProvider(IUserSessionQueryExecutor sessionQueryExecutor, IAppQueryExecutor appQueryExecutor)
+        public UserProvider(IUserSessionQueryExecutorDecorator sessionQueryExecutor, IAppQueryExecutorDecorator appQueryExecutor)
         {
             _sessionQueryExecutor = sessionQueryExecutor;
             _appQueryExecutor = appQueryExecutor;
@@ -53,7 +55,7 @@ namespace OID.SoapDataProvider.Providers
             return model;
         }
 
-        public async Task<DataProviderModel<SessionModel>> UpdateUser(UserModel userModel, UserProfileModel oldProfile, UserProfileModel newProfile)
+        public async Task<DataSessionProviderVoidModel> UpdateUser(UserModel userModel, UserProfileModel oldProfile, UserProfileModel newProfile)
         {
             var queryIdentifier = Guid.NewGuid().ToString();
             var query = new Query(queryIdentifier, "UpdateUser");
@@ -84,17 +86,10 @@ namespace OID.SoapDataProvider.Providers
                 query
             }, userModel).ConfigureAwait(false);
 
-            if (result.ResultMessage.Code == 0)
-            {
-                return new DataProviderModel<SessionModel>(result.ResultMessage, new SessionModel(result.SessionId));
-            }
-            else
-            {
-                return new DataProviderModel<SessionModel>(result.ResultMessage, null);
-            }
+            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
         }
 
-        public async Task<DataProviderModel<SessionModel>> ChangePassword(UserModel userModel, string oldPasswordHash, string newPasswordHash)
+        public async Task<DataSessionProviderVoidModel> ChangePassword(UserModel userModel, string oldPasswordHash, string newPasswordHash)
         {
             var queryIdentifier = Guid.NewGuid().ToString();
             var query = new Query(queryIdentifier, "UpdateUser_ChangePassword");
@@ -107,17 +102,11 @@ namespace OID.SoapDataProvider.Providers
                 query
             }, userModel);
 
-            if (result.ResultMessage.Code == 0)
-            {
-                return new DataProviderModel<SessionModel>(result.ResultMessage, new SessionModel(result.SessionId));
-            }
-            else
-            {
-                return new DataProviderModel<SessionModel>(result.ResultMessage, null);
-            }
+            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
+
         }
 
-        public async Task<DataProviderModel<SessionModel>> UpsertUserContacts(UserModel userModel, UserContactsModel oldContacts, UserContactsModel newContacts)
+        public async Task<DataSessionProviderVoidModel> UpsertUserContacts(UserModel userModel, UserContactsModel oldContacts, UserContactsModel newContacts)
         {
             var queries = new List<Query>();
 
@@ -152,10 +141,10 @@ namespace OID.SoapDataProvider.Providers
 
             var result = await _sessionQueryExecutor.Execute(queries, userModel).ConfigureAwait(false);
 
-            return new DataProviderModel<SessionModel>(result.ResultMessage, new SessionModel(result.SessionId));
+            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
         }
 
-        public async Task<DataProviderModel<SessionModel>> UpsertAccounts(UserModel userModel, IList<Account> accounts)
+        public async Task<DataSessionProviderVoidModel> UpsertAccounts(UserModel userModel, IList<Account> accounts)
         {
             var listQuery = new List<Query>();
 
@@ -169,7 +158,103 @@ namespace OID.SoapDataProvider.Providers
 
             var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
 
-            return new DataProviderModel<SessionModel>(result.ResultMessage, new SessionModel(result.SessionId));
+            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
+        }
+
+        public async Task<DataSessionProviderModel<DataProvider.Models.User.UserModel>> GetUser(UserModel userModel)
+        {
+            List<Query> listQuery = new List<Query>();
+            string q_guid = Guid.NewGuid().ToString();
+            Query query = new Query(q_guid, "GetUser");
+            listQuery.Add(query);
+
+            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+
+            var userRows = result.Queries.FirstOrDefault(q => q.Name == "GetUser")?.RetTable?.Rows;
+            if (userRows != null && userRows.Count > 0)
+            {
+                var userRow = userRows[0];
+                DeleveryLocationType? deleveryType = null;
+                if (userRow["DeleveryLocationType"] != null)
+                {
+                    switch (userRow["DeleveryLocationType"].ToString())
+                    {
+                        case "Location":
+                            deleveryType = DeleveryLocationType.Location;
+                            break;
+                        case "City":
+                            deleveryType = DeleveryLocationType.City;
+                            break;
+                    }
+                }
+
+                DateTime? birthDate = null;
+                if (!String.IsNullOrEmpty(userRow["BirthDate"]?.ToString()))
+                {
+                    birthDate = (DateTime) userRow["BirthDate"];
+                }
+
+                var user = new DataProvider.Models.User.UserModel(
+                    userRow["User_Id"].ToString(),
+                    userRow["Email"].ToString(),
+                    userRow["UserName"].ToString(),
+                    userRow["LastName"].ToString(),
+                    userRow["FirstName"].ToString(),
+                    userRow["SecondName"].ToString(),
+                    birthDate,
+                    userRow["CityCode"].ToString(),
+                    userRow["LocalityCode"].ToString(),
+                    userRow["RegionCode"].ToString(),
+                    deleveryType,
+                    userRow["Address"].ToString(),
+                    (DateTime) userRow["CreateDate"],
+                    userRow["Blocked"].ToString() != "N");
+
+                return new DataSessionProviderModel<DataProvider.Models.User.UserModel>(result.ResultMessage, user, result.SessionId);
+            }
+
+            return new DataSessionProviderModel<DataProvider.Models.User.UserModel>(result.ResultMessage, null, result.SessionId);
+        }
+
+        public async Task<DataSessionProviderModel<UserPhonesModel>> GetUserPhones(UserModel userModel)
+        {
+            List<Query> listQuery = new List<Query>();
+            string q_guid = Guid.NewGuid().ToString();
+            Query query = new Query(q_guid, "GetUserPhones");
+            listQuery.Add(query);
+
+            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+
+            var userRows = result.Queries.FirstOrDefault(q => q.Name == "GetUserPhones")?.RetTable?.Rows;
+            if (userRows != null && userRows.Count > 0)
+            {
+                UserPhone mobile = null, work = null, home = null, additional = null;
+                foreach (DataRow userRow in userRows)
+                {
+                    if (userRow["PhoneType_Name"].ToString() == "Mobile")
+                    {
+                        mobile = new UserPhone(userRow["PhoneNumber"].ToString(), userRow["Comment"].ToString());
+                    }
+                    if (userRow["PhoneType_Name"].ToString() == "Work")
+                    {
+                        work = new UserPhone(userRow["PhoneNumber"].ToString(), userRow["Comment"].ToString());
+                    }
+                    if (userRow["PhoneType_Name"].ToString() == "Home")
+                    {
+                        home = new UserPhone(userRow["PhoneNumber"].ToString(), userRow["Comment"].ToString());
+                    }
+                    if (userRow["PhoneType_Name"].ToString() == "Additional")
+                    {
+                        additional = new UserPhone(userRow["PhoneNumber"].ToString(), userRow["Comment"].ToString());
+                    }
+                }
+
+                var model = new UserPhonesModel(mobile, work, home, additional);
+
+                return new DataSessionProviderModel<UserPhonesModel>(result.ResultMessage, model, result.SessionId);
+            }
+
+            return new DataSessionProviderModel<UserPhonesModel>(result.ResultMessage, null, result.SessionId);
         }
 
         private static Query AccountToQuery(Account acc)
@@ -192,7 +277,7 @@ namespace OID.SoapDataProvider.Providers
             return query;
         }
 
-        private List<Query> GetPhoneSaveQuery(UserContactsModel.UserPhone phone, UserContactsModel.UserPhone old_phone, string PhoneType, List<Query> listQuery)
+        private List<Query> GetPhoneSaveQuery(UserPhone phone, UserPhone old_phone, string PhoneType, List<Query> listQuery)
         {
             var guid = Guid.NewGuid().ToString();
 

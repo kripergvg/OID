@@ -1,0 +1,32 @@
+﻿@using OID.Web.Authenticate
+
+@inject IUserManager UserManager
+
+@{
+    var user = UserManager.GetUser();
+}
+
+@if (user != null)
+{
+    <ul class="nav navbar-nav">
+        <li><a asp-area="" asp-controller="ObjectList" asp-action="Index">Объекты</a></li>
+        <li><a asp-area="" asp-controller="User" asp-action="Manage">Мои контакты</a></li>
+    </ul>
+    <form asp-area="" asp-controller="User" asp-action="LogOff" method="post" id="logoutForm" class="navbar-right">
+        <ul class="nav navbar-nav navbar-right">
+            <li>
+                <a asp-area="" asp-controller="User" asp-action="Manage" title="Manage">Привет @user.Login!</a>
+            </li>
+            <li>
+                <button type="submit" class="btn btn-link navbar-btn navbar-link">Выйти</button>
+            </li>
+        </ul>
+    </form>
+}
+else
+{
+    <ul class="nav navbar-nav navbar-right">
+        <li><a asp-area="" asp-controller="User" asp-action="Register">Регистрация</a></li>
+        <li><a asp-area="" asp-controller="User" asp-action="Login">Войти</a></li>
+    </ul>
+}

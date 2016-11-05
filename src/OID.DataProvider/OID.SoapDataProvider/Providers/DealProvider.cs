@@ -12,14 +12,14 @@ namespace OID.SoapDataProvider.Providers
 {
     public class DealProvider : IDealProvider
     {
-        private readonly IUserSessionQueryExecutor _sessionQueryExecutor;
+        private readonly IUserSessionQueryExecutorDecorator _sessionQueryExecutor;
 
-        public DealProvider(IUserSessionQueryExecutor sessionQueryExecutor)
+        public DealProvider(IUserSessionQueryExecutorDecorator sessionQueryExecutor)
         {
             _sessionQueryExecutor = sessionQueryExecutor;
         }
 
-        public async Task<DataProviderModel<SessionModel>> Approve(UserModel userModel, string dealId)
+        public async Task<DataSessionProviderVoidModel> Approve(UserModel userModel, string dealId)
         {
             var listQuery = new List<Query>();
 
@@ -31,10 +31,10 @@ namespace OID.SoapDataProvider.Providers
 
             var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
 
-            return new DataProviderModel<SessionModel>(result.ResultMessage, new SessionModel(result.SessionId));
+            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
         }
 
-        public async Task<DataProviderModel<SessionModel>> Leave(UserModel userModel, string dealId)
+        public async Task<DataSessionProviderVoidModel> Leave(UserModel userModel, string dealId)
         {
             var listQuery = new List<Query>();
 
@@ -45,10 +45,10 @@ namespace OID.SoapDataProvider.Providers
 
             var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
 
-            return new DataProviderModel<SessionModel>(result.ResultMessage, new SessionModel(result.SessionId));
+            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
         }
 
-        public async Task<DataProviderModel<SessionModel>> UpdateDelevery(UserModel userModel, DeleveryUpdateModel deleveryModel)
+        public async Task<DataSessionProviderVoidModel> UpdateDelevery(UserModel userModel, DeleveryUpdateModel deleveryModel)
         {
             var listQuery = new List<Query>();
 
@@ -66,10 +66,10 @@ namespace OID.SoapDataProvider.Providers
 
             var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
 
-            return new DataProviderModel<SessionModel>(result.ResultMessage, new SessionModel(result.SessionId));
+            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
         }
 
-        public async Task<DataProviderModel<PaymentStatusModel>> ExecutePayment(UserModel userModel, ExecutePaymentModel paymentModel, string paymentStatus)
+        public async Task<DataSessionProviderModel<PaymentStatusModel>> ExecutePayment(UserModel userModel, ExecutePaymentModel paymentModel, string paymentStatus)
         {
             var date = paymentModel.Date ?? DateTime.Now;
 
@@ -103,8 +103,8 @@ namespace OID.SoapDataProvider.Providers
 
             var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
 
-            var model = new DataProviderModel<PaymentStatusModel>(result.ResultMessage, null);
-      
+            var model = new DataSessionProviderModel<PaymentStatusModel>(result.ResultMessage, null, result.SessionId);
+
             foreach (var query in result.Queries)
             {
                 if (query.Name == "ExecutePayment")
@@ -122,7 +122,7 @@ namespace OID.SoapDataProvider.Providers
                         statusName = query.Parameters.Find(x => x.Code == "PaymentStatus_Name").Value;
                     }
 
-                    model.Model = new PaymentStatusModel(statusCode, statusName, result.SessionId);
+                    model.Model = new PaymentStatusModel(statusCode, statusName);
 
                     return model;
                 }
@@ -131,6 +131,110 @@ namespace OID.SoapDataProvider.Providers
             return model;
         }
 
-        public async Task<DataProviderModel<UpsertDealModel>>
+        //public async Task<DataSessionProviderModel<UpsertDealModel>> Upsert(UserModel userModel, UpsertDealModelIn upsertDealModel)
+        //{
+        //    string result = d.Query(QueryListToXml(GetDealQueryParam(Session_Id, deal), "queries", "query"));
+
+        //    d.Close();
+
+        //    List<Query> listResults = ParseQueryXml(result, "result", ref code, ref message);
+
+        //    foreach (Query q11 in listResults)
+        //    {
+        //        if (q11.Name == "UpsertDeal")
+        //        {
+        //            if (q11.Parameters.Exists(x => x.Code == "Deal_Id"))
+        //            {
+        //                Deal_Id = q11.Parameters.Find(x => x.Code == "Deal_Id").Value;
+        //                break;
+        //            }
+
+        //        }
+        //    }
+        //}
+
+        //private List<Query> GetDealQueryParam(string Session_Id, UpsertDealModelIn deal)
+        //{
+        //    List<Query> listQuery = new List<Query>();
+
+        //    string q1_guid = Guid.NewGuid().ToString();
+        //    Query q1 = new Query(q1_guid, "UpsertDeal");
+        //    q1.Parameters.Add(new QueryParameter("in", "BuySell", deal.BuySell, SqlDbType.Int));
+        //    q1.Parameters.Add(new QueryParameter("in", "Price", deal.Price, SqlDbType.Decimal));
+        //    q1.Parameters.Add(new QueryParameter("in", "Comment", deal.Comment, SqlDbType.NVarChar));
+        //    q1.Parameters.Add(new QueryParameter("in", "Session_Id", Session_Id, SqlDbType.NVarChar));
+        //    if (deal.DealId != null)
+        //    {
+        //        q1.Parameters.Add(new QueryParameter("in", "Deal_Id", deal.DealId, SqlDbType.Int));
+        //    }
+
+        //    if (deal.BuySell == "S")
+        //    {
+        //        //need to save account
+
+        //        //account exist or need to create?
+        //        if (deal.UserAccount.AccountId == null)
+        //        {
+        //            var acc = deal.UserAccount;
+
+        //            Query q = AccountToQuery(acc);
+        //            listQuery.Add(q);
+        //            q1.ParentQueryGUID.Add(q.GUID.ToString());
+        //        }
+        //        else
+        //        {
+        //            q1.Parameters.Add(new QueryParameter("in", "Account_Id", deal.UserAccount.AccountId, SqlDbType.Int));
+        //        }
+        //    }
+
+        //    listQuery.Add(q1);
+
+        //    foreach (var Object in deal.ObjectList)
+        //    {
+        //        string q2_guid = Guid.NewGuid().ToString();
+        //        Query q;
+
+        //        if (Object.Deleted)
+        //        {
+        //            q = new Query(q2_guid, "DeleteDealObject");
+        //            q.ParentQueryGUID.Add(q1_guid);
+        //            q.Parameters.Add(new QueryParameter("in", "Session_Id", Session_Id, SqlDbType.NVarChar));
+        //            q.Parameters.Add(new QueryParameter("in", "DealObject_Id", Object.DealObjectId, SqlDbType.Int));
+        //        }
+        //        else
+        //        {
+        //            q = new Query(q2_guid, "UpsertDealObject");
+        //            q.ParentQueryGUID.Add(q1_guid);
+        //            q.Parameters.Add(new QueryParameter("in", "Object_Id", Object.Object_Id, SqlDbType.Int));
+        //            q.Parameters.Add(new QueryParameter("in", "Session_Id", Session_Id, SqlDbType.NVarChar));
+        //            if (Object.DealObject_Id != null)
+        //            {
+        //                q.Parameters.Add(new QueryParameter("in", "DealObject_Id", Object.DealObject_Id, SqlDbType.Int));
+        //            }
+        //        }
+        //        listQuery.Add(q);
+        //    }
+
+        //    return listQuery;
+        //}
+
+        //private Query AccountToQuery(UpsertDealModelIn.Account acc)
+        //{
+        //    string q_guid = Guid.NewGuid().ToString();
+        //    Query q;
+
+        //    if (acc.Deleted)
+        //    {
+        //        q = new Query(q_guid, "DeleteUserAccount");
+        //        q.Parameters.Add(new QueryParameter("in", "UserAccount_Id", acc.UserAccountId, SqlDbType.Int));
+        //    }
+        //    else
+        //    {
+        //        q = new Query(q_guid, "InsertUserAccount");
+        //        q.Parameters.Add(new QueryParameter("in", "CptyService_Id", acc.PaymentCptyServiceId, SqlDbType.Int));
+        //        q.Parameters.Add(new QueryParameter("in", "AccountNumber", acc.AccountNumber, SqlDbType.NVarChar));
+        //    }
+        //    return q;
+        //}
     }
 }

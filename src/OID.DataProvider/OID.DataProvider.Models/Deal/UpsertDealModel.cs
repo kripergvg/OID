@@ -1,6 +1,6 @@
 ﻿namespace OID.DataProvider.Models.Deal
 {
-    public class UpsertDealModel : ISessionModel
+    public class UpsertDealModel 
     {
         public UpsertDealModel(string dealId)
         {

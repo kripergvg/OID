@@ -4,18 +4,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using OID.DataProvider.Interfaces;
 using OID.DataProvider.Models;
+using OID.Core;
 
 namespace OID.SoapDataProvider.Providers.Infrastructure
 {
-    public class UserSessionQueryExecutor : IUserSessionQueryExecutor
+    public class UserSessionQueryExecutorDecorator : IUserSessionQueryExecutorDecorator
     {
-        private readonly IAppQueryExecutor _appQueryExecutor;
         private readonly ISessionProvider _sessionProvider;
+        private readonly IQueryExecutor _executor;
+        private readonly ISessionUpdater _sessionUpdater;
 
-        public UserSessionQueryExecutor(IAppQueryExecutor appQueryExecutor, ISessionProvider sessionProvider)
+        public UserSessionQueryExecutorDecorator(ISessionProvider sessionProvider, IQueryExecutor executor, ISessionUpdater sessionUpdater)
         {
-            _appQueryExecutor = appQueryExecutor;
             _sessionProvider = sessionProvider;
+            _executor = executor;
+            _sessionUpdater = sessionUpdater;
         }
 
         public async Task<SessionQueryResult> Execute(List<Query> existedQueries, UserModel userModel)
@@ -25,7 +28,7 @@ namespace OID.SoapDataProvider.Providers.Infrastructure
                 existedQuery.Parameters.Add(new QueryParameter("in", "Session_Id", userModel.SessionId, SqlDbType.NVarChar));
             }
 
-            var result = await _appQueryExecutor.Execute(existedQueries).ConfigureAwait(false);
+            var result = await _executor.Execute(existedQueries).ConfigureAwait(false);
             if ((MessageType) result.ResultMessage.Code == MessageType.SessionNotAcitve)
             {
                 var authenticateResult = await _sessionProvider.Authenticate(userModel.Login, userModel.PasswordHash)
@@ -35,7 +38,9 @@ namespace OID.SoapDataProvider.Providers.Infrastructure
                     foreach (var existedQuery in existedQueries)
                     {
                         existedQuery.Parameters.Single(p => p.Code == "Session_Id").Value = authenticateResult.Model.SessionId;
-                        var queryResult = await _appQueryExecutor.Execute(existedQueries).ConfigureAwait(false);
+
+                        var queryResult = await _executor.Execute(existedQueries).ConfigureAwait(false);
+                        _sessionUpdater.Update(authenticateResult.Model.SessionId);
                         return new SessionQueryResult(queryResult, authenticateResult.Model.SessionId);
                     }
                 }

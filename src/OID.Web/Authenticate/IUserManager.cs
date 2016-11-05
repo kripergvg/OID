@@ -9,5 +9,9 @@ namespace OID.Web.Authenticate
         UserModel GetUser();
 
         void UpdateSessionId(ISessionModel model);
+
+        bool Authenticated();
+
+        void RemoveUser();
     }
 }

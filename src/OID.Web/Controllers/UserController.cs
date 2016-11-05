@@ -1,29 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using OID.Core.HashGenerator;
 using OID.DataProvider.Interfaces;
 using OID.DataProvider.Models;
 using OID.Web.Authenticate;
 using OID.Web.Models;
 
-// For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace OID.Web.Controllers
 {
-    public class UserController : Controller
+    public class UserController : OIDController
     {
         private readonly ISessionProvider _sessionProvider;
         private readonly IHashGenerator _hashGenerator;
         private readonly IUserManager _userManager;
+        private readonly IUserProvider _userProvider;
+        private readonly IRegionProvider _regionProvider;
 
-        public UserController(ISessionProvider sessionProvider, IHashGenerator hashGenerator, IUserManager userManager)
+        public UserController(ISessionProvider sessionProvider, IHashGenerator hashGenerator, IUserManager userManager, IUserProvider userProvider, IRegionProvider regionProvider)
         {
             _sessionProvider = sessionProvider;
             _hashGenerator = hashGenerator;
             _userManager = userManager;
+            _userProvider = userProvider;
+            _regionProvider = regionProvider;
         }
 
         // GET: /<controller>/
@@ -34,7 +37,7 @@ namespace OID.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginModel model, string returnUrl = null)
+        public async Task<IActionResult> Login(LoginModelViewModel model, string returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
@@ -60,6 +63,80 @@ namespace OID.Web.Controllers
             return View();
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
+        {
+            ViewData["ReturnUrl"] = returnUrl;
+            if (ModelState.IsValid)
+            {
+                var passwordHash = _hashGenerator.Generate(model.Password, true);
+                var registerResult = await _userProvider.CreateUser(model.Email, model.Name, _hashGenerator.Generate(passwordHash, true));
+
+                if (registerResult.ResultMessage.MessageType != MessageType.Error)
+                {
+                    var userModel = new UserModel(model.Email, passwordHash, registerResult.Model.SessionId);
+                    _userManager.SetUser(userModel);
+                    return RedirectToLocal(returnUrl);
+                }
+                else
+                {
+                    ModelState.AddModelError(String.Empty, registerResult.ResultMessage.Message);
+                }
+            }
+
+            return View(model);
+        }
+
+        [Authorize("HasSessionID")]
+        public IActionResult LogOff()
+        {
+            var user = _userManager.GetUser();
+            _sessionProvider.CloseSession(user.SessionId);
+            _userManager.RemoveUser();
+
+            return RedirectToLocal(null);
+        }
+
+        [Authorize("HasSessionID")]
+        public async Task<IActionResult> Manage()
+        {
+            //var user = _userManager.GetUser();
+
+            var model = new ManageUserViewModel();
+            //var fullUserRequest = await _userProvider.GetUser(user);
+            //_userManager.UpdateSessionId(fullUserRequest);
+
+            //var fullUser = fullUserRequest.Model;
+
+            //var deleveryType = AddressType.City;
+            //if (fullUser.DeleveryLocationType.HasValue)
+            //{
+            //    deleveryType = (AddressType) fullUser.DeleveryLocationType;
+            //}
+
+            //model.DeliveryLocationType = deleveryType
+
+            //if (!String.IsNullOrEmpty(fullUser.RegionCode))
+            //{
+            //    model.RegionCode = fullUser.RegionCode;
+
+            //    var localitiesRequest = await _regionProvider.GetLocalities(fullUser.RegionCode);
+            //    model.
+            //}
+
+            //var regions = await _regionProvider.GetRegions();
+            
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize("HasSessionID")]
+        public IActionResult Manage(ManageUserViewModel model)
+        {
+            return View(model);
+        }
+
         private IActionResult RedirectToLocal(string returnUrl)
         {
             if (Url.IsLocalUrl(returnUrl))
@@ -68,7 +145,7 @@ namespace OID.Web.Controllers
             }
             else
             {
-                return RedirectToAction(nameof(HomeController.Index), "Home");
+                return RedirectToIndex();
             }
         }
     }

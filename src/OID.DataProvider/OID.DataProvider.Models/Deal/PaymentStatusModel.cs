@@ -2,17 +2,14 @@
 {
     public class PaymentStatusModel 
     {
-        public PaymentStatusModel(string code, string name, string sessionId)
+        public PaymentStatusModel(string code, string name)
         {
             Code = code;
             Name = name;
-            SessionId = sessionId;
         }
 
         public string Code { get; }
 
         public string Name { get; }
-
-        public string SessionId { get; }
     }
 }

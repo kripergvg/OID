@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using OID.DataProvider.Interfaces;
 using OID.DataProvider.Models;
@@ -12,14 +13,14 @@ namespace OID.SoapDataProvider.Providers
 {
     public class DealObjectProvider : IDealObjectProvider
     {
-        private readonly IUserSessionQueryExecutor _sessionQueryExecutor;
+        private readonly IUserSessionQueryExecutorDecorator _sessionQueryExecutor;
 
-        public DealObjectProvider(IUserSessionQueryExecutor sessionQueryExecutor)
+        public DealObjectProvider(IUserSessionQueryExecutorDecorator sessionQueryExecutor)
         {
             _sessionQueryExecutor = sessionQueryExecutor;
         }
 
-        public async Task<DataProviderModel<UpsertObjectModel>> Upsert(UserModel userModel, DealObject dealObject)
+        public async Task<DataSessionProviderModel<UpsertObjectModel>> Upsert(UserModel userModel, DealObject dealObject)
         {
             var queryIdentifier1 = Guid.NewGuid().ToString();
             var query1 = new Query(queryIdentifier1, "UpsertUserObject");
@@ -86,7 +87,7 @@ namespace OID.SoapDataProvider.Providers
 
             var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
 
-            var model = new DataProviderModel<UpsertObjectModel>(result.ResultMessage, null);
+            var model = new DataSessionProviderModel<UpsertObjectModel>(result.ResultMessage, null, result.SessionId);
 
             foreach (var q11 in result.Queries)
             {
@@ -94,7 +95,7 @@ namespace OID.SoapDataProvider.Providers
                 {
                     if (q11.Parameters.Exists(x => x.Code == "Object_Id"))
                     {
-                        model.Model = new UpsertObjectModel(q11.Parameters.Find(x => x.Code == "Object_Id").Value, result.SessionId);
+                        model.Model = new UpsertObjectModel(q11.Parameters.Find(x => x.Code == "Object_Id").Value);
                     }
 
                 }
@@ -103,7 +104,7 @@ namespace OID.SoapDataProvider.Providers
             return model;
         }
 
-        public async Task<DataProviderModel<SessionModel>> Approve(UserModel userModel, string dealId)
+        public async Task<DataSessionProviderVoidModel> Approve(UserModel userModel, string dealId)
         {
             List<Query> listQuery = new List<Query>();
 
@@ -116,7 +117,43 @@ namespace OID.SoapDataProvider.Providers
 
             var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
 
-            return new DataProviderModel<SessionModel>(result.ResultMessage, new SessionModel(result.SessionId));
+            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
+        }
+
+        public async Task<DataSessionProviderModel<List<UserObject>>> GetUserObjects(UserModel userModel)
+        {
+            List<Query> listQuery = new List<Query>();
+
+            string q_guid = Guid.NewGuid().ToString();
+            Query query = new Query(q_guid, "GetUserObjects");
+            listQuery.Add(query);
+
+            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+
+            var userObjectsQuery = result.Queries.FirstOrDefault(q => q.Name == "GetUserObjects");
+
+            var objects = new List<UserObject>();
+            if (userObjectsQuery != null)
+            {
+                var dataTable = userObjectsQuery.RetTable;
+
+                foreach (DataRow objectRow in dataTable.Rows)
+                {
+                    objects.Add(new UserObject(
+                        objectRow["Object_Id"].ToString(),
+                        objectRow["ObjectName"].ToString(),
+                        objectRow["Description"].ToString(),
+                        objectRow["ObjectCategory_Name"].ToString(),
+                        objectRow["ObjectCategory_Id"].ToString(),
+                        objectRow["ObjectStatus_Name"].ToString(),
+                        objectRow["ObjectStatus_Id"].ToString(),
+                        objectRow["Blocked"].ToString() == "1"
+                    ));
+                }
+
+            }
+
+            return new DataSessionProviderModel<List<UserObject>>(result.ResultMessage, objects, result.SessionId);
         }
     }
 }

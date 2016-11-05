@@ -10,9 +10,9 @@ namespace OID.SoapDataProvider.Providers
 {
     public class SessionProvider : ISessionProvider
     {
-        private readonly IAppQueryExecutor _appQueryExecutor;
+        private readonly IAppQueryExecutorDecorator _appQueryExecutor;
 
-        public SessionProvider(IAppQueryExecutor appQueryExecutor)
+        public SessionProvider(IAppQueryExecutorDecorator appQueryExecutor)
         {
             _appQueryExecutor = appQueryExecutor;
         }

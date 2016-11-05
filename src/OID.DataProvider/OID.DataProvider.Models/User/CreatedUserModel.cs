@@ -1,6 +1,6 @@
 ﻿namespace OID.DataProvider.Models.User
 {
-    public class CreatedUserModel: ISessionModel
+    public class CreatedUserModel
     {
         public CreatedUserModel(string sessionId)
         {

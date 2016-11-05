@@ -4,7 +4,7 @@ using OID.SoapDataProvider.QuerySerializator;
 
 namespace OID.SoapDataProvider.Providers.Infrastructure
 {
-    public interface IAppQueryExecutor
+    public interface IQueryExecutor
     {
         Task<QueryResult> Execute(List<Query> existedQueries);
     }
