@@ -11,6 +11,7 @@ namespace OID.Web.Core.MappingProfiles
         {
             CreateMap<UserObject, ObjectListViewModel>();
             CreateMap<UserPhone, PhoneViewModel>().ForMember(d => d.Phone, s => s.MapFrom(src => src.Number));
+            CreateMap<PhoneViewModel, UserPhone>().ForMember(d => d.Number, s => s.MapFrom(src => src.Phone));
         }
     }
 }

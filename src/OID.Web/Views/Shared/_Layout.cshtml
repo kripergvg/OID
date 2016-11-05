@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - OID.Web</title>
+    <title>@ViewData["Title"] - Оплата и доставка</title>
 
     <environment names="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
@@ -26,7 +26,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">OID.Web</a>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">Оплата и доставка</a>
             </div>
             <div class="navbar-collapse collapse">
                 @await Html.PartialAsync("_MenuPartial")
@@ -38,7 +38,7 @@
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; 2016 - OID.Web</p>
+            <p>&copy; 2016 - Оплата и доставка</p>
         </footer>
     </div>
 
@@ -46,8 +46,9 @@
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
-        <script src="~/js/delevery.js" ></script>
-        <script src="lib/angular/angular.js"></script>
+        <script src="~/js/delevery.js"></script>
+        <script src="~/lib/angular/angular.js"></script>
+        <script src="~/js/regions.js"></script>
     </environment>
     <environment names="Staging,Production">
         <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-2.2.0.min.js"

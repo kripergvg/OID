@@ -105,7 +105,7 @@ namespace OID.SoapDataProvider.Providers
             return new DataProviderVoidModel(result.ResultMessage);
         }
 
-        public async Task<DataProviderVoidModel> UpdatetUser(UserUpdateModel user)
+        public async Task<DataProviderVoidModel> UpdatetUserAddress(UpdateUserAddressModel user)
         {
             var queries = new List<Query>();
 
@@ -301,7 +301,14 @@ namespace OID.SoapDataProvider.Providers
 
         private static string GetPhoneOnlyDigits(string s)
         {
-            return s.Replace("(", "").Replace(")", "").Replace("-", "").Replace(" ", "").Replace("+", "");
+            if (String.IsNullOrEmpty(s))
+            {
+                return s;
+            }
+            else
+            {
+                return s.Replace("(", "").Replace(")", "").Replace("-", "").Replace(" ", "").Replace("+", "");
+            }
         }
     }
 }

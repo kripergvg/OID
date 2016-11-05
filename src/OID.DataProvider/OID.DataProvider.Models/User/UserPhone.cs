@@ -2,6 +2,11 @@
 {
     public class UserPhone
     {
+        public UserPhone()
+        {
+            
+        }
+
         public UserPhone(string number, string comment)
         {
             Comment = comment;

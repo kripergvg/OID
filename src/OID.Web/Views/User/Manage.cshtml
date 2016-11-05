@@ -65,8 +65,8 @@
             <div class="row">
                 <div class="col-md-12">
                     <label asp-for="DeliveryLocationType" style="margin-right: 10px" class="control-label"></label>
-                    <input asp-for="DeliveryLocationType" type="radio" data-radio-identifier="deleveryType" value="@AddressType.City" @(Model.DeliveryLocationType==AddressType.City?"checked":"")/> Город
-                    <input asp-for="DeliveryLocationType" type="radio" data-radio-identifier="deleveryType" value="@AddressType.Locality" @(Model.DeliveryLocationType==AddressType.Locality?"checked":"") /> Населенный пункт
+                    <input asp-for="DeliveryLocationType" type="radio" data-radio-identifier="deleveryType" value="@AddressType.City" @(Model.DeliveryLocationType= =AddressType.City?"checked":"") /> Город
+                    <input asp-for="DeliveryLocationType" type="radio" data-radio-identifier="deleveryType" value="@AddressType.Locality" @(Model.DeliveryLocationType= =AddressType.Locality?"checked":"") /> Населенный пункт
                 </div>
             </div>
         </div>
@@ -76,7 +76,7 @@
             <div class="row">
                 <label asp-for="RegionCode" class="control-label col-md-2"></label>
                 <div class="col-md-10">
-                    <select asp-for="RegionCode" class="form-control" asp-items="@Model.RegionList"></select>
+                    <select asp-for="RegionCode" id="regionList" class="form-control" asp-items="@Model.RegionList"></select>
                 </div>
             </div>
         </div>
@@ -87,7 +87,7 @@
                 <div class="row">
                     <label asp-for="City.CityCode" class="control-label col-md-2"></label>
                     <div class="col-md-10">
-                        <select asp-for="City.CityCode" class="form-control" asp-items="@Model.City.CityList"></select>
+                        <select id="cityList" asp-for="City.CityCode" class="form-control" asp-items="@Model.City.CityList"></select>
                     </div>
                 </div>
             </div>
@@ -100,7 +100,7 @@
                 <div class="row">
                     <label asp-for="Locality.LocalityCode" class="control-label col-md-2"></label>
                     <div class="col-md-10">
-                        <select asp-for="Locality.LocalityCode" class="form-control" asp-items="@Model.Locality.LocalityList"></select>
+                        <select id="localityList" asp-for="Locality.LocalityCode" class="form-control" asp-items="@Model.Locality.LocalityList"></select>
                     </div>
                 </div>
             </div>
@@ -110,7 +110,7 @@
                 <div class="row">
                     <label asp-for="Locality.LocationCode" class="control-label col-md-2"></label>
                     <div class="col-md-10">
-                        <select asp-for="Locality.LocationCode" class="form-control" asp-items="@Model.Locality.LocationList"></select>
+                        <select id="locationList" asp-for="Locality.LocationCode" class="form-control" asp-items="@Model.Locality.LocationList"></select>
                     </div>
                 </div>
             </div>

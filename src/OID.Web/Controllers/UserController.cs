@@ -11,9 +11,11 @@ using OID.Core;
 using OID.Core.HashGenerator;
 using OID.DataProvider.Interfaces;
 using OID.DataProvider.Models;
+using OID.DataProvider.Models.User;
 using OID.DataProvider.Models.User.In;
 using OID.Web.Models;
 using Constants = OID.Web.Core.Constants;
+using UserModel = OID.Core.UserModel;
 
 namespace OID.Web.Controllers
 {
@@ -118,7 +120,7 @@ namespace OID.Web.Controllers
 
             string regionCode = String.IsNullOrEmpty(user.RegionCode) ? Constants.MOSCOW_KLADR : user.RegionCode;
             model.RegionCode = regionCode;
-            model.RegionList = new SelectList((await regionsTask).Model, "Code", "Name", regionCode);
+            model.RegionList = new SelectList((await regionsTask).Model.OrderBy(l => l.Name), "Code", "Name", regionCode);
 
             var userPhones = (await userPhonesTask).Model;
 
@@ -135,10 +137,10 @@ namespace OID.Web.Controllers
 
             model.DeliveryLocationType = deleveryType;
 
-            var regionTask = _regionProvider.GetLocalities(regionCode);
+            var locationTask = _regionProvider.GetLocalities(regionCode);
             var cityTask = _regionProvider.GetLocationsByRegion(regionCode);
 
-            var localitiesRequest = await regionTask;
+            var localitiesRequest = await locationTask;
             string localityCode = String.IsNullOrEmpty(user.LocalityCode) ? localitiesRequest.Model.First().Code : user.LocalityCode;
 
             var cityRequest = await cityTask;
@@ -147,7 +149,7 @@ namespace OID.Web.Controllers
             model.City = new ManageUserViewModel.CityViewModel
             {
                 CityCode = cityCode,
-                CityList = new SelectList(cityRequest.Model, "Code", "Name", cityCode)
+                CityList = new SelectList(cityRequest.Model.OrderBy(l => l.Name), "Code", "Name", cityCode)
             };
 
             var locationRequest = await _regionProvider.GetLocationsByLocality(localityCode);
@@ -155,9 +157,9 @@ namespace OID.Web.Controllers
 
             model.Locality = new ManageUserViewModel.LocalityViewModel
             {
-                LocalityList = new SelectList(localitiesRequest.Model, "Code", "Name", localityCode),
+                LocalityList = new SelectList(localitiesRequest.Model.OrderBy(l => l.Name), "Code", "Name", localityCode),
                 LocalityCode = user.LocalityCode,
-                LocationList = new SelectList(locationRequest.Model, "Code", "Name", locationCode),
+                LocationList = new SelectList(locationRequest.Model.OrderBy(l => l.Name), "Code", "Name", locationCode),
                 LocationCode = user.CityCode
             };
 
@@ -172,22 +174,38 @@ namespace OID.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var userTask = _userProvider.GetUser();
-                var userPhonesTask = _userProvider.GetUserPhones();
+                var userPhones = (await _userProvider.GetUserPhones()).Model;
 
-                var user = (await userTask).Model;
-                var oldUserModel=new UserContactsModel(
-                {
-                    Address = user.Address,
-                    LocalityCode = user.LocalityCode,
-                }
+                var cityCode = model.DeliveryLocationType == AddressType.City ? model.City.CityCode : model.Locality.LocationCode;
 
+                await _userProvider.UpdatetUserAddress(new UpdateUserAddressModel(cityCode, model.Locality.LocalityCode, model.RegionCode, (DeleveryLocationType?) model.DeliveryLocationType,
+                     model.Address));
 
-                var userPhones = (await userPhonesTask).Model;
+                var homePhoneTask = ChangePhone(userPhones.Home, model.PhoneHome, PhoneType.Home);
+                var additionalPhoneTask = ChangePhone(userPhones.Additional, model.PhoneAdditional, PhoneType.Additional);
+                var mobilePhoneTask = ChangePhone(userPhones.Mobile, model.PhoneMobile, PhoneType.Mobile);
+                var workPhoneTask = ChangePhone(userPhones.Work, model.PhoneWork, PhoneType.Work);
 
-                _userProvider.UpsertUserContacts()
+                await Task.WhenAll(homePhoneTask, additionalPhoneTask, mobilePhoneTask, workPhoneTask);
+
+                ShowSuccess("Контакты успешно обновленны!");
+                return RedirectToAction(nameof(UserController.Manage));
             }
+
             return View(model);
+        }
+
+        private async Task ChangePhone(UserPhone oldPhone, PhoneViewModel newPhone, PhoneType phoneType)
+        {
+            if ((oldPhone == null && newPhone != null) ||
+                (oldPhone != null && newPhone != null))
+            {
+                await _userProvider.UpsertUserPhone(phoneType, _mapper.Map<UserPhone>(newPhone));
+            }
+            else if (oldPhone != null)
+            {
+                await _userProvider.DeleteUserPhone(phoneType, oldPhone);
+            }
         }
 
         private IActionResult RedirectToLocal(string returnUrl)

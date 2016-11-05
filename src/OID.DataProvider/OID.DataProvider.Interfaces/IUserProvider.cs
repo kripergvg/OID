@@ -14,12 +14,16 @@ namespace OID.DataProvider.Interfaces
 
         Task<DataProviderVoidModel> ChangePassword(string oldPasswordHash, string newPasswordHash);
 
-        Task<DataProviderVoidModel> UpsertUserContacts(UserContactsModel oldContacts, UserContactsModel newContacts);
+        Task<DataProviderVoidModel> UpdatetUserAddress(UpdateUserAddressModel user);
 
         Task<DataProviderVoidModel> UpsertAccounts(IList<Account> accounts);
 
         Task<DataProviderModel<UserModel>> GetUser();
 
         Task<DataProviderModel<UserPhonesModel>> GetUserPhones();
+
+        Task<DataProviderVoidModel> DeleteUserPhone(PhoneType phoneType, UserPhone phone);
+
+        Task<DataProviderVoidModel> UpsertUserPhone(PhoneType phoneType, UserPhone phone);
     }
 }

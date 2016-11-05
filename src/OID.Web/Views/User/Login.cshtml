@@ -36,11 +36,9 @@
                 <div class="form-group">
                     <div class="col-md-offset-2 col-md-10">
                         <button type="submit" class="btn btn-success">Войти</button>
+                        <a asp-action="Register" class="btn btn-info" asp-route-returnurl="@ViewData["ReturnUrl"]">Зарегистрироваться</a>
                     </div>
                 </div>
-                <p>
-                    <a asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Зарегистрироваться</a>
-                </p>
             </form>
         </section>
     </div>
