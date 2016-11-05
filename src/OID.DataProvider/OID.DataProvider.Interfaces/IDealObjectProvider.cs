@@ -3,15 +3,16 @@ using System.Threading.Tasks;
 using OID.DataProvider.Models;
 using OID.DataProvider.Models.Object;
 using OID.DataProvider.Models.Object.In;
+using OID.DataProvider.Models.User;
 
 namespace OID.DataProvider.Interfaces
 {
     public interface IDealObjectProvider
     {
-        Task<DataSessionProviderModel<UpsertObjectModel>> Upsert(UserModel userModel, DealObject dealObject);
+        Task<DataProviderModel<UpsertObjectModel>> Upsert(DealObject dealObject);
 
-        Task<DataSessionProviderVoidModel> Approve(UserModel userModel, string dealId);
+        Task<DataProviderVoidModel> Approve(string dealId);
 
-        Task<DataSessionProviderModel<List<UserObject>>> GetUserObjects(UserModel userModel);
+        Task<DataProviderModel<List<UserObject>>> GetUserObjects();
     }
 }

@@ -1,8 +1,8 @@
 ﻿namespace OID.DataProvider.Models
 {
-    public class DataProviderModel<T> : DataProviderVoidModel
+    public class DataProviderModel<T> : DataProviderVoidModel where T : class
     {
-        public DataProviderModel(ResultMessage resultMessage, T model)
+        public DataProviderModel(ResultMessage resultMessage, T model = null)
             : base(resultMessage)
         {
             Model = model;

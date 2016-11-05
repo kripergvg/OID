@@ -1,6 +1,4 @@
-﻿using OID.DataProvider.Models;
-
-namespace OID.Web.Authenticate
+﻿namespace OID.Core
 {
     public interface IUserManager
     {
@@ -8,7 +6,7 @@ namespace OID.Web.Authenticate
 
         UserModel GetUser();
 
-        void UpdateSessionId(ISessionModel model);
+        void UpdateSessionId(string sessionId);
 
         bool Authenticated();
 

@@ -20,7 +20,7 @@ namespace OID.SoapDataProvider.Providers
             _sessionQueryExecutor = sessionQueryExecutor;
         }
 
-        public async Task<DataSessionProviderModel<UpsertObjectModel>> Upsert(UserModel userModel, DealObject dealObject)
+        public async Task<DataProviderModel<UpsertObjectModel>> Upsert(DealObject dealObject)
         {
             var queryIdentifier1 = Guid.NewGuid().ToString();
             var query1 = new Query(queryIdentifier1, "UpsertUserObject");
@@ -85,9 +85,9 @@ namespace OID.SoapDataProvider.Providers
                 listQuery.Add(query);
             }
 
-            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
 
-            var model = new DataSessionProviderModel<UpsertObjectModel>(result.ResultMessage, null, result.SessionId);
+            var model = new DataProviderModel<UpsertObjectModel>(result.ResultMessage);
 
             foreach (var q11 in result.Queries)
             {
@@ -104,7 +104,7 @@ namespace OID.SoapDataProvider.Providers
             return model;
         }
 
-        public async Task<DataSessionProviderVoidModel> Approve(UserModel userModel, string dealId)
+        public async Task<DataProviderVoidModel> Approve(string dealId)
         {
             List<Query> listQuery = new List<Query>();
 
@@ -115,12 +115,12 @@ namespace OID.SoapDataProvider.Providers
             listQuery.Add(q1);
 
 
-            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
 
-            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
+            return new DataProviderVoidModel(result.ResultMessage);
         }
 
-        public async Task<DataSessionProviderModel<List<UserObject>>> GetUserObjects(UserModel userModel)
+        public async Task<DataProviderModel<List<UserObject>>> GetUserObjects()
         {
             List<Query> listQuery = new List<Query>();
 
@@ -128,7 +128,7 @@ namespace OID.SoapDataProvider.Providers
             Query query = new Query(q_guid, "GetUserObjects");
             listQuery.Add(query);
 
-            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
 
             var userObjectsQuery = result.Queries.FirstOrDefault(q => q.Name == "GetUserObjects");
 
@@ -153,7 +153,7 @@ namespace OID.SoapDataProvider.Providers
 
             }
 
-            return new DataSessionProviderModel<List<UserObject>>(result.ResultMessage, objects, result.SessionId);
+            return new DataProviderModel<List<UserObject>>(result.ResultMessage, objects);
         }
     }
 }

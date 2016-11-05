@@ -8,7 +8,7 @@ using OID.DataProvider.Models;
 using OID.DataProvider.Models.User;
 using OID.DataProvider.Models.User.In;
 using OID.SoapDataProvider.Providers.Infrastructure;
-using UserModel = OID.DataProvider.Models.UserModel;
+using UserModel = OID.Core.UserModel;
 
 namespace OID.SoapDataProvider.Providers
 {
@@ -55,7 +55,7 @@ namespace OID.SoapDataProvider.Providers
             return model;
         }
 
-        public async Task<DataSessionProviderVoidModel> UpdateUser(UserModel userModel, UserProfileModel oldProfile, UserProfileModel newProfile)
+        public async Task<DataProviderVoidModel> UpdateUser(UserProfileModel oldProfile, UserProfileModel newProfile)
         {
             var queryIdentifier = Guid.NewGuid().ToString();
             var query = new Query(queryIdentifier, "UpdateUser");
@@ -84,12 +84,12 @@ namespace OID.SoapDataProvider.Providers
             var result = await _sessionQueryExecutor.Execute(new List<Query>
             {
                 query
-            }, userModel).ConfigureAwait(false);
+            }).ConfigureAwait(false);
 
-            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
+            return new DataProviderVoidModel(result.ResultMessage);
         }
 
-        public async Task<DataSessionProviderVoidModel> ChangePassword(UserModel userModel, string oldPasswordHash, string newPasswordHash)
+        public async Task<DataProviderVoidModel> ChangePassword(string oldPasswordHash, string newPasswordHash)
         {
             var queryIdentifier = Guid.NewGuid().ToString();
             var query = new Query(queryIdentifier, "UpdateUser_ChangePassword");
@@ -100,13 +100,12 @@ namespace OID.SoapDataProvider.Providers
             var result = await _sessionQueryExecutor.Execute(new List<Query>
             {
                 query
-            }, userModel);
+            });
 
-            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
-
+            return new DataProviderVoidModel(result.ResultMessage);
         }
 
-        public async Task<DataSessionProviderVoidModel> UpsertUserContacts(UserModel userModel, UserContactsModel oldContacts, UserContactsModel newContacts)
+        public async Task<DataProviderVoidModel> UpsertUserContacts(UserContactsModel oldContacts, UserContactsModel newContacts)
         {
             var queries = new List<Query>();
 
@@ -139,12 +138,12 @@ namespace OID.SoapDataProvider.Providers
                 queries.Add(q1);
             }
 
-            var result = await _sessionQueryExecutor.Execute(queries, userModel).ConfigureAwait(false);
+            var result = await _sessionQueryExecutor.Execute(queries).ConfigureAwait(false);
 
-            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
+            return new DataProviderVoidModel(result.ResultMessage);
         }
 
-        public async Task<DataSessionProviderVoidModel> UpsertAccounts(UserModel userModel, IList<Account> accounts)
+        public async Task<DataProviderVoidModel> UpsertAccounts(IList<Account> accounts)
         {
             var listQuery = new List<Query>();
 
@@ -156,19 +155,19 @@ namespace OID.SoapDataProvider.Providers
                 }
             }
 
-            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
 
-            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
+            return new DataProviderVoidModel(result.ResultMessage);
         }
 
-        public async Task<DataSessionProviderModel<DataProvider.Models.User.UserModel>> GetUser(UserModel userModel)
+        public async Task<DataProviderModel<DataProvider.Models.User.UserModel>> GetUser()
         {
             List<Query> listQuery = new List<Query>();
             string q_guid = Guid.NewGuid().ToString();
             Query query = new Query(q_guid, "GetUser");
             listQuery.Add(query);
 
-            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
 
             var userRows = result.Queries.FirstOrDefault(q => q.Name == "GetUser")?.RetTable?.Rows;
             if (userRows != null && userRows.Count > 0)
@@ -210,20 +209,20 @@ namespace OID.SoapDataProvider.Providers
                     (DateTime) userRow["CreateDate"],
                     userRow["Blocked"].ToString() != "N");
 
-                return new DataSessionProviderModel<DataProvider.Models.User.UserModel>(result.ResultMessage, user, result.SessionId);
+                return new DataProviderModel<DataProvider.Models.User.UserModel>(result.ResultMessage, user);
             }
 
-            return new DataSessionProviderModel<DataProvider.Models.User.UserModel>(result.ResultMessage, null, result.SessionId);
+            return new DataProviderModel<DataProvider.Models.User.UserModel>(result.ResultMessage);
         }
 
-        public async Task<DataSessionProviderModel<UserPhonesModel>> GetUserPhones(UserModel userModel)
+        public async Task<DataProviderModel<UserPhonesModel>> GetUserPhones()
         {
             List<Query> listQuery = new List<Query>();
             string q_guid = Guid.NewGuid().ToString();
             Query query = new Query(q_guid, "GetUserPhones");
             listQuery.Add(query);
 
-            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
 
             var userRows = result.Queries.FirstOrDefault(q => q.Name == "GetUserPhones")?.RetTable?.Rows;
             if (userRows != null && userRows.Count > 0)
@@ -251,10 +250,10 @@ namespace OID.SoapDataProvider.Providers
 
                 var model = new UserPhonesModel(mobile, work, home, additional);
 
-                return new DataSessionProviderModel<UserPhonesModel>(result.ResultMessage, model, result.SessionId);
+                return new DataProviderModel<UserPhonesModel>(result.ResultMessage, model);
             }
 
-            return new DataSessionProviderModel<UserPhonesModel>(result.ResultMessage, null, result.SessionId);
+            return new DataProviderModel<UserPhonesModel>(result.ResultMessage);
         }
 
         private static Query AccountToQuery(Account acc)

@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using OID.Core;
 using OID.Core.HashGenerator;
 using OID.DataProvider.Interfaces;
 using OID.DataProvider.Models;
-using OID.Web.Authenticate;
 using OID.Web.Models;
 
 namespace OID.Web.Controllers

@@ -48,11 +48,6 @@ namespace OID.SoapDataProvider.Providers
             return model;
         }
 
-        public DataProviderModel<bool> CheckSession(string sessionId)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<DataProviderVoidModel> CloseSession(string sessionId)
         {
             string queryIdentifier = Guid.NewGuid().ToString();

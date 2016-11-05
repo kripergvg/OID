@@ -1,4 +1,4 @@
-﻿namespace OID.DataProvider.Models
+﻿namespace OID.Core
 {
     public class UserModel
     {

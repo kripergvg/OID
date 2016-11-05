@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
-using OID.DataProvider.Models;
+using OID.Core;
 
 namespace OID.Web.Authenticate
 {
@@ -36,12 +36,12 @@ namespace OID.Web.Authenticate
             return null;
         }
 
-        public void UpdateSessionId(ISessionModel model)
+        public void UpdateSessionId(string sessionId)
         {
             var user = GetUser();
             if (user != null)
             {
-                user.SessionId = model.SessionId;
+                user.SessionId = sessionId;
                 SetUser(user);
             }
         }

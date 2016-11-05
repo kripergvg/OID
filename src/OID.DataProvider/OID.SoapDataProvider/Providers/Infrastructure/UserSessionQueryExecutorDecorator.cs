@@ -12,17 +12,19 @@ namespace OID.SoapDataProvider.Providers.Infrastructure
     {
         private readonly ISessionProvider _sessionProvider;
         private readonly IQueryExecutor _executor;
-        private readonly ISessionUpdater _sessionUpdater;
+        private readonly IUserManager _userManager;
 
-        public UserSessionQueryExecutorDecorator(ISessionProvider sessionProvider, IQueryExecutor executor, ISessionUpdater sessionUpdater)
+        public UserSessionQueryExecutorDecorator(ISessionProvider sessionProvider, IQueryExecutor executor, IUserManager userManager)
         {
             _sessionProvider = sessionProvider;
             _executor = executor;
-            _sessionUpdater = sessionUpdater;
+            _userManager = userManager;
         }
 
-        public async Task<SessionQueryResult> Execute(List<Query> existedQueries, UserModel userModel)
+        public async Task<SessionQueryResult> Execute(List<Query> existedQueries)
         {
+            var userModel = _userManager.GetUser();
+
             foreach (var existedQuery in existedQueries)
             {
                 existedQuery.Parameters.Add(new QueryParameter("in", "Session_Id", userModel.SessionId, SqlDbType.NVarChar));
@@ -40,7 +42,7 @@ namespace OID.SoapDataProvider.Providers.Infrastructure
                         existedQuery.Parameters.Single(p => p.Code == "Session_Id").Value = authenticateResult.Model.SessionId;
 
                         var queryResult = await _executor.Execute(existedQueries).ConfigureAwait(false);
-                        _sessionUpdater.Update(authenticateResult.Model.SessionId);
+                        _userManager.UpdateSessionId(authenticateResult.Model.SessionId);
                         return new SessionQueryResult(queryResult, authenticateResult.Model.SessionId);
                     }
                 }

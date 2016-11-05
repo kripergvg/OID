@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
+using OID.Core;
 using OID.DataProvider.Interfaces;
 using OID.DataProvider.Models;
 using OID.DataProvider.Models.Deal;
@@ -19,7 +20,7 @@ namespace OID.SoapDataProvider.Providers
             _sessionQueryExecutor = sessionQueryExecutor;
         }
 
-        public async Task<DataSessionProviderVoidModel> Approve(UserModel userModel, string dealId)
+        public async Task<DataProviderVoidModel> Approve(string dealId)
         {
             var listQuery = new List<Query>();
 
@@ -29,12 +30,12 @@ namespace OID.SoapDataProvider.Providers
             q1.Parameters.Add(new QueryParameter("in", "Approve", "Y", SqlDbType.NVarChar));
             listQuery.Add(q1);
 
-            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
 
-            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
+            return new DataProviderVoidModel(result.ResultMessage);
         }
 
-        public async Task<DataSessionProviderVoidModel> Leave(UserModel userModel, string dealId)
+        public async Task<DataProviderVoidModel> Leave(string dealId)
         {
             var listQuery = new List<Query>();
 
@@ -43,12 +44,12 @@ namespace OID.SoapDataProvider.Providers
             q1.Parameters.Add(new QueryParameter("in", "Deal_Id", dealId, SqlDbType.Int));
             listQuery.Add(q1);
 
-            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
 
-            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
+            return new DataProviderVoidModel(result.ResultMessage);
         }
 
-        public async Task<DataSessionProviderVoidModel> UpdateDelevery(UserModel userModel, DeleveryUpdateModel deleveryModel)
+        public async Task<DataProviderVoidModel> UpdateDelevery(DeleveryUpdateModel deleveryModel)
         {
             var listQuery = new List<Query>();
 
@@ -64,12 +65,12 @@ namespace OID.SoapDataProvider.Providers
 
             listQuery.Add(q1);
 
-            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
 
-            return new DataSessionProviderVoidModel(result.ResultMessage, result.SessionId);
+            return new DataProviderVoidModel(result.ResultMessage);
         }
 
-        public async Task<DataSessionProviderModel<PaymentStatusModel>> ExecutePayment(UserModel userModel, ExecutePaymentModel paymentModel, string paymentStatus)
+        public async Task<DataProviderModel<PaymentStatusModel>> ExecutePayment(ExecutePaymentModel paymentModel, string paymentStatus)
         {
             var date = paymentModel.Date ?? DateTime.Now;
 
@@ -101,9 +102,9 @@ namespace OID.SoapDataProvider.Providers
             }
             listQuery.Add(q1);
 
-            var result = await _sessionQueryExecutor.Execute(listQuery, userModel).ConfigureAwait(false);
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
 
-            var model = new DataSessionProviderModel<PaymentStatusModel>(result.ResultMessage, null, result.SessionId);
+            var model = new DataProviderModel<PaymentStatusModel>(result.ResultMessage);
 
             foreach (var query in result.Queries)
             {

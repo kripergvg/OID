@@ -7,12 +7,12 @@ namespace OID.DataProvider.Interfaces
 {
     public interface IDealProvider
     {
-        Task<DataSessionProviderVoidModel> Approve(UserModel userModel, string dealId);
+        Task<DataProviderVoidModel> Approve(string dealId);
 
-        Task<DataSessionProviderVoidModel> Leave(UserModel userModel, string dealId);
+        Task<DataProviderVoidModel> Leave(string dealId);
 
-        Task<DataSessionProviderVoidModel> UpdateDelevery(UserModel userModel, DeleveryUpdateModel deleveryModel);
+        Task<DataProviderVoidModel> UpdateDelevery(DeleveryUpdateModel deleveryModel);
 
-        Task<DataSessionProviderModel<PaymentStatusModel>> ExecutePayment(UserModel userModel, ExecutePaymentModel paymentModel, string paymentStatus);
+        Task<DataProviderModel<PaymentStatusModel>> ExecutePayment(ExecutePaymentModel paymentModel, string paymentStatus);
     }
 }
