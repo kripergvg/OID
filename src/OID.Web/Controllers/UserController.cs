@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.DotNet.Cli.Utils;
 using OID.Core;
 using OID.Core.HashGenerator;
 using OID.DataProvider.Interfaces;
 using OID.DataProvider.Models;
+using OID.DataProvider.Models.User.In;
 using OID.Web.Models;
+using Constants = OID.Web.Core.Constants;
 
 namespace OID.Web.Controllers
 {
@@ -19,14 +24,17 @@ namespace OID.Web.Controllers
         private readonly IUserManager _userManager;
         private readonly IUserProvider _userProvider;
         private readonly IRegionProvider _regionProvider;
+        private readonly IMapper _mapper;
 
-        public UserController(ISessionProvider sessionProvider, IHashGenerator hashGenerator, IUserManager userManager, IUserProvider userProvider, IRegionProvider regionProvider)
+        public UserController(ISessionProvider sessionProvider, IHashGenerator hashGenerator, IUserManager userManager, IUserProvider userProvider,
+            IRegionProvider regionProvider, IMapper mapper)
         {
             _sessionProvider = sessionProvider;
             _hashGenerator = hashGenerator;
             _userManager = userManager;
             _userProvider = userProvider;
             _regionProvider = regionProvider;
+            _mapper = mapper;
         }
 
         // GET: /<controller>/
@@ -100,40 +108,85 @@ namespace OID.Web.Controllers
         [Authorize("HasSessionID")]
         public async Task<IActionResult> Manage()
         {
-            //var user = _userManager.GetUser();
-
             var model = new ManageUserViewModel();
-            //var fullUserRequest = await _userProvider.GetUser(user);
-            //_userManager.UpdateSessionId(fullUserRequest);
 
-            //var fullUser = fullUserRequest.Model;
+            var userTask = _userProvider.GetUser();
+            var regionsTask = _regionProvider.GetRegions();
+            var userPhonesTask = _userProvider.GetUserPhones();
 
-            //var deleveryType = AddressType.City;
-            //if (fullUser.DeleveryLocationType.HasValue)
-            //{
-            //    deleveryType = (AddressType) fullUser.DeleveryLocationType;
-            //}
+            var user = (await userTask).Model;
 
-            //model.DeliveryLocationType = deleveryType
+            string regionCode = String.IsNullOrEmpty(user.RegionCode) ? Constants.MOSCOW_KLADR : user.RegionCode;
+            model.RegionCode = regionCode;
+            model.RegionList = new SelectList((await regionsTask).Model, "Code", "Name", regionCode);
 
-            //if (!String.IsNullOrEmpty(fullUser.RegionCode))
-            //{
-            //    model.RegionCode = fullUser.RegionCode;
+            var userPhones = (await userPhonesTask).Model;
 
-            //    var localitiesRequest = await _regionProvider.GetLocalities(fullUser.RegionCode);
-            //    model.
-            //}
+            model.PhoneMobile = _mapper.Map<PhoneViewModel>(userPhones.Mobile);
+            model.PhoneWork = _mapper.Map<PhoneViewModel>(userPhones.Work);
+            model.PhoneHome = _mapper.Map<PhoneViewModel>(userPhones.Home);
+            model.PhoneAdditional = _mapper.Map<PhoneViewModel>(userPhones.Additional);
 
-            //var regions = await _regionProvider.GetRegions();
-            
+            var deleveryType = AddressType.City;
+            if (user.DeleveryLocationType.HasValue)
+            {
+                deleveryType = (AddressType) user.DeleveryLocationType;
+            }
+
+            model.DeliveryLocationType = deleveryType;
+
+            var regionTask = _regionProvider.GetLocalities(regionCode);
+            var cityTask = _regionProvider.GetLocationsByRegion(regionCode);
+
+            var localitiesRequest = await regionTask;
+            string localityCode = String.IsNullOrEmpty(user.LocalityCode) ? localitiesRequest.Model.First().Code : user.LocalityCode;
+
+            var cityRequest = await cityTask;
+            string cityCode = String.IsNullOrEmpty(user.CityCode) ? cityRequest.Model.First().Code : user.CityCode;
+
+            model.City = new ManageUserViewModel.CityViewModel
+            {
+                CityCode = cityCode,
+                CityList = new SelectList(cityRequest.Model, "Code", "Name", cityCode)
+            };
+
+            var locationRequest = await _regionProvider.GetLocationsByLocality(localityCode);
+            string locationCode = String.IsNullOrEmpty(user.CityCode) ? locationRequest.Model.First().Code : user.CityCode;
+
+            model.Locality = new ManageUserViewModel.LocalityViewModel
+            {
+                LocalityList = new SelectList(localitiesRequest.Model, "Code", "Name", localityCode),
+                LocalityCode = user.LocalityCode,
+                LocationList = new SelectList(locationRequest.Model, "Code", "Name", locationCode),
+                LocationCode = user.CityCode
+            };
+
+            model.Address = user.Address;
 
             return View(model);
         }
 
         [HttpPost]
         [Authorize("HasSessionID")]
-        public IActionResult Manage(ManageUserViewModel model)
+        public async Task<IActionResult> Manage(ManageUserViewModel model)
         {
+            if (ModelState.IsValid)
+            {
+                var userTask = _userProvider.GetUser();
+                var userPhonesTask = _userProvider.GetUserPhones();
+
+                var user = (await userTask).Model;
+                var oldUserModel=new UserContactsModel(
+                {
+                    Address = user.Address,
+                    LocalityCode = user.LocalityCode,
+                }
+
+
+                var userPhones = (await userPhonesTask).Model;
+
+                _userProvider.UpsertUserContacts()
+            }
             return View(model);
         }
 

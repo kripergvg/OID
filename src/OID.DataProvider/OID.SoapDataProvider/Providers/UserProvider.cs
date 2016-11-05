@@ -105,34 +105,29 @@ namespace OID.SoapDataProvider.Providers
             return new DataProviderVoidModel(result.ResultMessage);
         }
 
-        public async Task<DataProviderVoidModel> UpsertUserContacts(UserContactsModel oldContacts, UserContactsModel newContacts)
+        public async Task<DataProviderVoidModel> UpdatetUser(UserUpdateModel user)
         {
             var queries = new List<Query>();
 
-            GetPhoneSaveQuery(newContacts.PhoneMobile, oldContacts.PhoneMobile, "Mobile", queries);
-            GetPhoneSaveQuery(newContacts.PhoneWork, oldContacts.PhoneWork, "Work", queries);
-            GetPhoneSaveQuery(newContacts.PhoneHome, oldContacts.PhoneHome, "Home", queries);
-            GetPhoneSaveQuery(newContacts.PhoneAdditional, oldContacts.PhoneAdditional, "Additional", queries);
-
-            if ((newContacts.DeliveryLocationType == "City" && newContacts.CityCode != null)
-                || (newContacts.DeliveryLocationType == "Location" && newContacts.LocalityCode != null)
-                || !String.IsNullOrWhiteSpace(newContacts.Address))
+            if ((user.DeleveryLocationType == DeleveryLocationType.City && user.CityCode != null)
+                || (user.DeleveryLocationType == DeleveryLocationType.Location && user.LocalityCode != null)
+                || !String.IsNullOrWhiteSpace(user.Address))
             {
                 var queryIdentifier = Guid.NewGuid().ToString();
                 var q1 = new Query(queryIdentifier, "UpdateUser");
 
-                q1.Parameters.Add(!string.IsNullOrEmpty(newContacts.Address)
-                    ? new QueryParameter("in", "Address", newContacts.Address, SqlDbType.NVarChar)
+                q1.Parameters.Add(!string.IsNullOrEmpty(user.Address)
+                    ? new QueryParameter("in", "Address", user.Address, SqlDbType.NVarChar)
                     : new QueryParameter("in", "Address", "", SqlDbType.NVarChar));
 
-                if (newContacts.DeliveryLocationType == "City" && newContacts.CityCode != null)
+                if (user.DeleveryLocationType == DeleveryLocationType.City && user.CityCode != null)
                 {
-                    q1.Parameters.Add(new QueryParameter("in", "CityCode", newContacts.CityCode, SqlDbType.NVarChar));
+                    q1.Parameters.Add(new QueryParameter("in", "CityCode", user.CityCode, SqlDbType.NVarChar));
                 }
 
-                if (newContacts.DeliveryLocationType == "Location" && newContacts.LocalityCode != null)
+                if (user.DeleveryLocationType == DeleveryLocationType.Location && user.LocalityCode != null)
                 {
-                    q1.Parameters.Add(new QueryParameter("in", "CityCode", newContacts.LocationCode, SqlDbType.NVarChar));
+                    q1.Parameters.Add(new QueryParameter("in", "CityCode", user.CityCode, SqlDbType.NVarChar));
                 }
 
                 queries.Add(q1);
@@ -140,6 +135,34 @@ namespace OID.SoapDataProvider.Providers
 
             var result = await _sessionQueryExecutor.Execute(queries).ConfigureAwait(false);
 
+            return new DataProviderVoidModel(result.ResultMessage);
+        }
+
+        public async Task<DataProviderVoidModel> DeleteUserPhone(PhoneType phoneType, UserPhone phone)
+        {
+            var guid = Guid.NewGuid().ToString();
+
+            var queries = new List<Query>();
+            var q2 = new Query(guid, "DeleteUserPhone");
+            q2.Parameters.Add(new QueryParameter("in", "PhoneType_Name", phoneType.GetName(), SqlDbType.NVarChar));
+            q2.Parameters.Add(new QueryParameter("in", "PhoneNumber", GetPhoneOnlyDigits(phone.Number), SqlDbType.Int));
+            queries.Add(q2);
+
+            var result = await _sessionQueryExecutor.Execute(queries).ConfigureAwait(false);
+            return new DataProviderVoidModel(result.ResultMessage);
+        }
+
+        public async Task<DataProviderVoidModel> UpsertUserPhone(PhoneType phoneType, UserPhone phone)
+        {
+            var guid = Guid.NewGuid().ToString();
+            var q1 = new Query(guid, "UpsertUserPhone");
+            q1.Parameters.Add(new QueryParameter("in", "PhoneType_Name", phoneType.GetName(), SqlDbType.NVarChar));
+            q1.Parameters.Add(new QueryParameter("in", "PhoneNumber", GetPhoneOnlyDigits(phone.Number), SqlDbType.Int));
+            q1.Parameters.Add(new QueryParameter("in", "Comment", phone.Comment, SqlDbType.NVarChar));
+
+            var queries = new List<Query> {q1};
+
+            var result = await _sessionQueryExecutor.Execute(queries).ConfigureAwait(false);
             return new DataProviderVoidModel(result.ResultMessage);
         }
 
@@ -174,9 +197,9 @@ namespace OID.SoapDataProvider.Providers
             {
                 var userRow = userRows[0];
                 DeleveryLocationType? deleveryType = null;
-                if (userRow["DeleveryLocationType"] != null)
+                if (userRow["DeliveryLocationType"] != null)
                 {
-                    switch (userRow["DeleveryLocationType"].ToString())
+                    switch (userRow["DeliveryLocationType"].ToString())
                     {
                         case "Location":
                             deleveryType = DeleveryLocationType.Location;
@@ -190,7 +213,7 @@ namespace OID.SoapDataProvider.Providers
                 DateTime? birthDate = null;
                 if (!String.IsNullOrEmpty(userRow["BirthDate"]?.ToString()))
                 {
-                    birthDate = (DateTime) userRow["BirthDate"];
+                    birthDate = Convert.ToDateTime(userRow["BirthDate"].ToString());
                 }
 
                 var user = new DataProvider.Models.User.UserModel(
@@ -206,7 +229,7 @@ namespace OID.SoapDataProvider.Providers
                     userRow["RegionCode"].ToString(),
                     deleveryType,
                     userRow["Address"].ToString(),
-                    (DateTime) userRow["CreateDate"],
+                    Convert.ToDateTime(userRow["CreateDate"].ToString()),
                     userRow["Blocked"].ToString() != "N");
 
                 return new DataProviderModel<DataProvider.Models.User.UserModel>(result.ResultMessage, user);
@@ -274,36 +297,6 @@ namespace OID.SoapDataProvider.Providers
             }
 
             return query;
-        }
-
-        private List<Query> GetPhoneSaveQuery(UserPhone phone, UserPhone old_phone, string PhoneType, List<Query> listQuery)
-        {
-            var guid = Guid.NewGuid().ToString();
-
-            if (phone != null)
-            {
-                if (old_phone != null && String.IsNullOrWhiteSpace(phone.Number))
-                {
-                    //Delete phone
-                    var q2 = new Query(guid, "DeleteUserPhone");
-                    q2.Parameters.Add(new QueryParameter("in", "PhoneType_Name", PhoneType, SqlDbType.NVarChar));
-                    q2.Parameters.Add(new QueryParameter("in", "PhoneNumber", GetPhoneOnlyDigits(old_phone.Number), SqlDbType.Int));
-
-                    listQuery.Add(q2);
-                }
-                else if (!String.IsNullOrWhiteSpace(phone.Number))
-                {
-                    var q1 = new Query(guid, "UpsertUserPhone");
-                    q1.Parameters.Add(new QueryParameter("in", "PhoneType_Name", PhoneType, SqlDbType.NVarChar));
-                    q1.Parameters.Add(new QueryParameter("in", "PhoneNumber", GetPhoneOnlyDigits(phone.Number), SqlDbType.Int));
-                    q1.Parameters.Add(new QueryParameter("in", "Comment", phone.Comment, SqlDbType.NVarChar));
-
-                    listQuery.Add(q1);
-
-                }
-            }
-
-            return listQuery;
         }
 
         private static string GetPhoneOnlyDigits(string s)

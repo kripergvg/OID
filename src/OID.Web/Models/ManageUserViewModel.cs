@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace OID.Web.Models
@@ -30,7 +31,7 @@ namespace OID.Web.Models
         [Display(Name = "Регион")]
         public string RegionCode { get; set; }
 
-        public IList<SelectListItem> RegionList { get; set; }
+        public SelectList RegionList { get; set; }
 
         public CityViewModel City { get; set; }
 
@@ -43,32 +44,32 @@ namespace OID.Web.Models
         {
             public CityViewModel()
             {
-                CityList = new List<SelectListItem>();
+                CityList = new SelectList(Enumerable.Empty<object>());
             }
 
             [Display(Name = "Город")]
             public string CityCode { get; set; }
 
-            public IList<SelectListItem> CityList { get; set; }
+            public SelectList CityList { get; set; }
         }
 
         public class LocalityViewModel
         {
             public LocalityViewModel()
             {
-                LocalityList = new List<SelectListItem>();
-                LocationList = new List<SelectListItem>();
+                LocalityList = new SelectList(Enumerable.Empty<object>());
+                LocationList = new SelectList(Enumerable.Empty<object>());
             }
 
             [Display(Name = "Район")]
             public string LocalityCode { get; set; }
 
-            public IList<SelectListItem> LocalityList { get; set; }
+            public SelectList LocalityList { get; set; }
 
             [Display(Name = "Населенный пункт")]
             public string LocationCode { get; set; }
 
-            public IList<SelectListItem> LocationList { get; set; }
+            public SelectList LocationList { get; set; }
         }
     }
 }
