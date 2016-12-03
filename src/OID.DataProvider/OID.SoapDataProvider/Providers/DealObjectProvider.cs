@@ -372,5 +372,22 @@ namespace OID.SoapDataProvider.Providers
 
             return model;
         }
+
+        public async Task<DataProviderVoidModel> DeleteObject(string objectId)
+        {
+            var queryIdentifier1 = Guid.NewGuid().ToString();
+            var query1 = new Query(queryIdentifier1, "DeleteUserObject");
+
+            query1.Parameters.Add(new QueryParameter("in", "Object_Id", objectId, SqlDbType.Int));
+
+            var listQuery = new List<Query>
+            {
+                query1
+            };
+
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
+            var model = new DataProviderVoidModel(result.ResultMessage);
+            return model;
+        }
     }
 }

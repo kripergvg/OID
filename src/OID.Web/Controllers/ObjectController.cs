@@ -211,9 +211,21 @@ namespace OID.Web.Controllers
             return View(model);
         }
 
-        public async Task<IActionResult> Delete()
+        [HttpPost]
+        public async Task<IActionResult> Delete(string objectId)
         {
-            return View();
+            var deleteResult = await _dealObjectProvider.DeleteObject(objectId);
+            if (deleteResult.ResultMessage.MessageType == MessageType.Information)
+            {
+                ShowSuccess("Успешно удален!");
+                
+            }
+            else
+            {
+                ShowError("При обновление произошла ошибка!");
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

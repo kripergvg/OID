@@ -1,4 +1,5 @@
 ﻿/// <autosync enabled="true" />
+/// <reference path="js/alert.js" />
 /// <reference path="js/dealobject.js" />
 /// <reference path="js/delevery.js" />
 /// <reference path="js/objectlist/objectlistcontroller.js" />

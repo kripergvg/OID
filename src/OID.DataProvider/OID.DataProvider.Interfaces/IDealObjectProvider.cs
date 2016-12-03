@@ -28,5 +28,7 @@ namespace OID.DataProvider.Interfaces
         Task<DataProviderVoidModel> CreateChecks(List<DealCheck> checks, string checkListId, string objectId);
 
         Task<DataProviderVoidModel> UpdateObject(UpdateDealObject dealObject);
+
+        Task<DataProviderVoidModel> DeleteObject(string objectId);
     }
 }

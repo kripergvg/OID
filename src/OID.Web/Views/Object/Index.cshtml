@@ -34,9 +34,14 @@
                 <td>
                     <a href="@Url.Action("Update", new {objectID = dealObject.ObjectId, checkListId=dealObject.CheckListId})" class="btn btn-warning">Редактировать</a>
                     <a href="@Url.Action("Copy", new {objectID = dealObject.ObjectId, checkListId=dealObject.CheckListId})" class="btn btn-primary">Копировать</a>
-                    <a href="@Url.Action("Delete", new {objectID = dealObject.ObjectId})" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span></a>
+                    <form asp-action="Delete" id="deleteObject@(dealObject.ObjectId)" style="display: inline">
+                        <input type="hidden" name="objectId" value="@dealObject.ObjectId"/>
+                        <button class="btn btn-danger"type="button"  onclick="deleteObject('#deleteObject@(dealObject.ObjectId)')"><span class="glyphicon glyphicon-trash"></span></button>
+                    </form>                    
                 </td>
             </tr>
         }
     </tbody>
+
+    @Html.Partial("_ConfirmAlert")
 </table>
