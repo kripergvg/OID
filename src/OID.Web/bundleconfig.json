@@ -13,7 +13,8 @@
     "inputFiles": [
       "wwwroot/js/site.js",
       "wwwroot/js/delevery.js",
-      "wwwroot/js/regions.js"
+      "wwwroot/js/regions.js",
+      "wwwroot/js/dealObject.js"
     ],
     // Optionally specify minification options
     "minify": {

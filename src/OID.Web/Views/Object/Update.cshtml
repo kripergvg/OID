@@ -1,0 +1,8 @@
+﻿@model OID.Web.Models.UpdateObjectViewModel
+
+<form method="post">
+    <input type="hidden" asp-for="ObjectId"/>
+    <input type="hidden" asp-for="CheckListId" />
+    @Html.Partial("Partials/ObjectModify", Model.ModifyViewModel)
+    <button type="submit" class="btn-success btn">Сохранить</button>
+</form>

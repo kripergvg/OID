@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using OID.DataProvider.Models;
+using OID.DataProvider.Models.Deal;
 using OID.DataProvider.Models.Object;
 using OID.DataProvider.Models.Object.In;
-using OID.DataProvider.Models.User;
 
 namespace OID.DataProvider.Interfaces
 {
@@ -14,5 +14,19 @@ namespace OID.DataProvider.Interfaces
         Task<DataProviderVoidModel> Approve(string dealId);
 
         Task<DataProviderModel<List<UserObject>>> GetUserObjects();
+
+        Task<DataProviderModel<List<ObjectCategory>>> GetCategories();
+
+        Task<DataProviderModel<string>> CreateObject(CreateDealObject dealObject);
+
+        Task<DataProviderModel<List<CheckListItem>>> GetChecks(string checkListId);
+
+        Task<DataProviderModel<UserObject>> GetUserObject(string objectID);
+
+        Task<DataProviderVoidModel> DeleteChecks(List<string> checkIds, string checkListId, string objectId);
+
+        Task<DataProviderVoidModel> CreateChecks(List<DealCheck> checks, string checkListId, string objectId);
+
+        Task<DataProviderVoidModel> UpdateObject(UpdateDealObject dealObject);
     }
 }

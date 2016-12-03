@@ -43,7 +43,7 @@ namespace OID.Web
             containerBuilder.Populate(services);
             containerBuilder
                 .RegisterCore()
-                .RegisterSoapDataProvider("Web@OplataIDostavka.ru", "!533244w", "http://localhost:58680/api/query")
+                .RegisterSoapDataProvider("Web@OplataIDostavka.ru", "!533244w", "http://lh.oidsoap.ru/api/query")
                 .RegisterWeb();
 
             var container = containerBuilder.Build();

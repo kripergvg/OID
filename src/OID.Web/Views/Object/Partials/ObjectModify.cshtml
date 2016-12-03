@@ -1,0 +1,76 @@
+﻿@using OID.Web.Models
+@model ObjectModifyViewModel
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="Name"></label>
+            <input asp-for="Name" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Description"></label>
+            <input asp-for="Description" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="CategoryCode"></label>
+            <select asp-for="CategoryCode" asp-items="@Model.CategoryList" class="form-control"></select>
+        </div>
+        <div class="form-group">
+            <label asp-for="ObjectStatusType"></label>
+            <input asp-for="ObjectStatusType" type="radio" value="@ObjectStatusType.WantBuy" @(Model.ObjectStatusType==ObjectStatusType.WantBuy?"checked":"") /> Хочу купить
+            <input asp-for="ObjectStatusType" type="radio" value="@ObjectStatusType.WantSell" @(Model.ObjectStatusType==ObjectStatusType.WantSell?"checked":"") /> Хочу продать
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="form-group">
+            <label>Вид проверки</label>           
+            <select asp-items="Html.GetEnumSelectList<CheckType>()" id="checkType" class="form-control"></select>
+        </div>
+        <div class="form-group">
+            <label>Подробное описание проверки</label>
+            <textarea id="checkDescription" class="form-control"></textarea>
+        </div>
+        <div class="form-group">
+            <input type="file" id="checkImage"/>
+        </div>
+        <button class="btn btn-info" id="addCheck" type="button">Добавить проверку</button>
+        <table class="table table-hover" id="checkList" style="display: @(Model.ObjectChecks.Any() ? "table" : "none")">
+            <thead>
+            <tr class="active">
+                <th>Вид прооверки</th>
+                <th>Подробное описание проверки</th>
+                <th>Фотография для проверки</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            @for (int index = 0; index < Model.ObjectChecks.Count; index++)
+            {
+                var objectCheck = Model.ObjectChecks[index];
+                <tr>
+                    <td>
+                        
+                        <input type="hidden" name="ObjectChecks.Index" value="@index"/>
+                        <input type="hidden" name="ObjectChecks[@index].CheckId" value="@objectCheck.CheckId" />
+                        <input type="hidden" name="ObjectChecks[@index].CheckType" value="@objectCheck.CheckType"/>
+                        @objectCheck.CheckType
+                    </td>
+                    <td>
+                        <input type="hidden" name="ObjectChecks[@index].Description" value="@objectCheck.Description" />
+                        @objectCheck.Description
+                    </td>
+                    <td>
+                        <input type="hidden" name="ObjectChecks[@index].ImageUrl" value="@objectCheck.ImageUrl" />
+                        <img src="@objectCheck.ImageUrl" style="max-height: 50px; max-width: 50px;"/>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger checkListDelete" type="button">
+                            <span class="glyphicon glyphicon-trash"></span></button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+

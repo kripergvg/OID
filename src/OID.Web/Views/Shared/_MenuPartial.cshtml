@@ -10,7 +10,7 @@
 @if (user != null)
 {
     <ul class="nav navbar-nav">
-        <li><a asp-area="" asp-controller="ObjectList" asp-action="Index">Объекты</a></li>
+        <li><a asp-area="" asp-controller="Object" asp-action="Index">Объекты</a></li>
         <li><a asp-area="" asp-controller="User" asp-action="Manage">Мои контакты</a></li>
     </ul>
     <form asp-area="" asp-controller="User" asp-action="LogOff" method="post" id="logoutForm" class="navbar-right">

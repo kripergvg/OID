@@ -1,0 +1,42 @@
+﻿@using System.Threading.Tasks
+@using OID.Web.Models
+
+@model List<ObjectListViewModel>
+
+<a href="@Url.Action("Create")" style="margin-bottom: 20px;" class="btn btn-success">Добавить объект <span class="glyphicon glyphicon-plus" style="margin-left: 5px;"></span></a>
+
+<table class="table table-hover">
+    <thead>
+        <tr class="active">
+            <th>Наименование</th>
+            <th>Описание</th>
+            <th>Категория объекта</th>
+            <th>Статус объекта</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var dealObject in Model)
+        {
+            <tr>
+                <td>
+                    @dealObject.Name
+                </td>
+                <td>
+                    @dealObject.Description
+                </td>
+                <td>
+                    @dealObject.CategoryName
+                </td>
+                <td>
+                    @dealObject.StatusName
+                </td>
+                <td>
+                    <a href="@Url.Action("Update", new {objectID = dealObject.ObjectId, checkListId=dealObject.CheckListId})" class="btn btn-warning">Редактировать</a>
+                    <a href="@Url.Action("Copy", new {objectID = dealObject.ObjectId, checkListId=dealObject.CheckListId})" class="btn btn-primary">Копировать</a>
+                    <a href="@Url.Action("Delete", new {objectID = dealObject.ObjectId})" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span></a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

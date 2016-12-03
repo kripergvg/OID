@@ -17,5 +17,7 @@
         public string StatusId { get; set; }
 
         public bool Blocked { get; set; }
+
+        public string CheckListId { get; set; }
     }
 }
