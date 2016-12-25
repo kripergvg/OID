@@ -1,4 +1,4 @@
-﻿namespace OID.Web.Models
+﻿namespace OID.Web.Models.Object
 {
     public class UpdateObjectViewModel
     {

@@ -40,3 +40,7 @@ table thead th {
     vertical-align: bottom;
     border-bottom: 2px solid #ddd;
 }
+.table-hover > tbody > tr:hover {
+  background-color: #D2D2D2;
+    cursor: pointer;
+}

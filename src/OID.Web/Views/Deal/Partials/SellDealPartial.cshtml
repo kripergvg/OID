@@ -1,0 +1,92 @@
+﻿@using System.Threading.Tasks
+@using OID.Web.Models
+@using OID.Web.Models.Deal
+@using OID.DataProvider.Models.User
+
+@model OID.Web.Models.Deal.SellDealModifyViewModel
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label style="display: block">Обьекты</label>
+            <select asp-items="@Model.FreeDealObjects" style="margin-bottom: 13px;width: 261px; display: inline;" id="freeDealObjects" class="form-control" @(Model.FreeDealObjects.Any()?"":"disabled") ></select>
+            <button class="btn btn-info" id="addDealObject" style="display: inline" type="button" @(Model.FreeDealObjects.Any() ? "" : "disabled")>Добавить</button>
+        </div>
+        <div>
+            <table class="table table-hover" id="dealObjectList">
+                <thead>
+                    <tr>
+                        <th>
+                            Название
+                        </th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int index = 0; index < Model.SelectedDealObjects.Count; index++)
+                    {
+                        var dealObject = Model.SelectedDealObjects[index];
+                        <tr>
+                            <td>
+                                <input type="hidden" name="SelectedDealObjects.Index" value="@index" />
+                                <input type="hidden" name="SelectedDealObjects[@index].ObjectId" class="objectId" value="@dealObject.ObjectId" />
+                                <input type="hidden" name="SelectedDealObjects[@index].Name" class="objectName" value="@dealObject.Name" />
+                                @dealObject.Name
+                            </td>
+                            <td style="width: 95px;">
+                                <button class="btn btn-danger deleteDealObject" type="button">Удалить</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-3 col-md-offset-1">
+        <div class="form-group">
+            <label asp-for="Price"></label>
+            <input asp-for="Price" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Comment"></label>
+            <textarea asp-for="Comment" class="form-control"></textarea>
+        </div>
+        <div class="form-group">
+            <label asp-for="Weight"></label>
+            <input asp-for="Weight" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Size" style="display: block"></label>
+            <input asp-for="Size.Height" style="display: inline; width: 65px;" class="form-control" />
+            <input asp-for="Size.Width" style="display: inline;width: 65px;" class="form-control" />
+            <input asp-for="Size.Length" style="display: inline;width: 65px;" class="form-control" />
+        </div>
+        <div class="form-group">
+            <input asp-for="AccountAction" type="radio" data-radio-identifier="accountAction" value="@AccountAction.Existed" @(Model.AccountAction= =AccountAction.Existed?"checked":"") /> Выбрать счет
+            <input asp-for="AccountAction" type="radio" data-radio-identifier="accountAction" value="@AccountAction.New" @(Model.AccountAction= =AccountAction.New?"checked":"") /> Завести новый счет
+        </div>
+        <div data-radio-identifier="accountAction" data-region="@AccountAction.Existed" style="display: @(Model.AccountAction == AccountAction.Existed ? "block" : "none")">
+            <div class="form-group">
+                <label asp-for="UserAccountId"></label>
+                <select asp-items="Model.UserAccounts" asp-for="UserAccountId" class="form-control"></select>
+            </div>
+        </div>
+        <div data-radio-identifier="accountAction" data-region="@AccountAction.New" style="display: @(Model.AccountAction==AccountAction.New?"block":"none")">
+            <div class="form-group">
+                <label asp-for="PaymentType"></label>
+                <select asp-items="Html.GetEnumSelectList<PaymentType>()" asp-for="AccountAction" class="form-control"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="AccountNumber"></label>
+                <input asp-for="AccountNumber" class="form-control" />
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-md-offset-1">
+        <div class="form-group">
+            <label asp-for="DeleveryTypeId"></label>
+            <select asp-items="@Model.DeleveryTypes" asp-for="DeleveryTypeId" class="form-control"></select>
+        </div>
+        @Html.Partial("_AddressWithoutBootstrap", Model.AddressModel)
+    </div>
+</div>

@@ -13,6 +13,7 @@ using OID.DataProvider.Models.Object;
 using OID.DataProvider.Models.Object.In;
 using OID.Web.Authenticate;
 using OID.Web.Models;
+using OID.Web.Models.Object;
 
 namespace OID.Web.Controllers
 {

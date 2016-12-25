@@ -1,0 +1,6 @@
+﻿@model OID.Web.Models.Deal.SellDealModifyViewModel
+
+<form method="post" asp-action="CreateSell">
+    @Html.Partial("Partials/SellDealPartial", Model)
+    <button type="submit" class="btn-success btn">Создать</button>
+</form>

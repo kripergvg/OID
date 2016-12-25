@@ -25,5 +25,9 @@ namespace OID.DataProvider.Interfaces
         Task<DataProviderVoidModel> DeleteUserPhone(PhoneType phoneType, UserPhone phone);
 
         Task<DataProviderVoidModel> UpsertUserPhone(PhoneType phoneType, UserPhone phone);
+
+        Task<DataProviderModel<List<UserAccount>>> GetUserAccounts();
+
+        Task<DataProviderModel<CreateUserAccountModel>> CreateUserAccount(int accountNumber, PaymentType paymentType);
     }
 }

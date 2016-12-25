@@ -9,11 +9,11 @@ namespace OID.DataProvider.Interfaces
 {
     public interface IDealObjectProvider
     {
-        Task<DataProviderModel<UpsertObjectModel>> Upsert(DealObject dealObject);
+        //Task<DataProviderModel<UpsertObjectModel>> Upsert(DealObject dealObject);
 
         Task<DataProviderVoidModel> Approve(string dealId);
 
-        Task<DataProviderModel<List<UserObject>>> GetUserObjects();
+        Task<DataProviderModel<List<UserObject>>> GetUserObjects(bool onlyNotBlocked = false, DealType? dealType = null);
 
         Task<DataProviderModel<List<ObjectCategory>>> GetCategories();
 
@@ -30,5 +30,7 @@ namespace OID.DataProvider.Interfaces
         Task<DataProviderVoidModel> UpdateObject(UpdateDealObject dealObject);
 
         Task<DataProviderVoidModel> DeleteObject(string objectId);
+
+        Task<DataProviderModel<List<DealObject>>> GetDealObjects(int dealId);
     }
 }

@@ -22,6 +22,8 @@ namespace OID.SoapDataProvider
             builder.Register(c => new AppQueryExecutorDecorator(login, password, c.Resolve<IHashGenerator>(), c.Resolve<IQueryExecutor>()))
                 .As<IAppQueryExecutorDecorator>();
             builder.RegisterType<QueryExecutor>().As<IQueryExecutor>();
+            builder.RegisterType<SoapParser>().As<ISoapParser>();
+            builder.RegisterType<DealProvider>().As<IDealProvider>();
 
             return builder;
         }

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace OID.Web.Models
+namespace OID.Web.Models.User
 {
     public class RegisterViewModel
     {

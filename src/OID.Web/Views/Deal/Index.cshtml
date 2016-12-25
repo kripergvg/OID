@@ -1,0 +1,68 @@
+﻿@using System.Threading.Tasks
+@using OID.DataProvider.Models.Deal
+
+@model List<OID.Web.Models.Deal.DealViewModel>
+
+<div>
+    <div class="btn-group" role="group" style="margin-bottom: 15px">
+        <a href="@Url.Action("CreateSell")" class="btn btn-lg btn-info">Хочу купить</a>
+        <a href="@Url.Action("CreateSell")" class="btn btn-lg btn-info">Хочу продать</a>
+        <a href="@Url.Action("CreateSell")" class="btn btn-lg btn-info">Принять сделку</a>
+    </div>
+    <div >
+        <table class="table table-hover" id="dealList">
+            <thead>
+                <tr class="active">
+                    <th>Объекты</th>
+                    <th>Цена</th>
+                    <th>Комментарий</th>
+                    <th>Номер сделки</th>
+                    <th>Пин</th>
+                    <th>Тип сделки</th>
+                    <th>Дата создания</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var deal in Model)
+                {
+                    <tr data-deal-id="@deal.DealId">
+                        <td>
+                            @deal.Objects
+                        </td>
+                        <td>
+                            @deal.Price
+                        </td>
+                        <td>
+                            @deal.Comment
+                        </td>
+                        <td>
+                            @deal.DealId
+                        </td>
+                        <td>
+                            @deal.Pin
+                        </td>
+                        <td>
+                            @(deal.DealType == DealType.Buy ? "Покупка" : "Продажа")
+                        </td>
+                        <td>
+                            @deal.CreateDate
+                        </td>
+                        <td>
+                            @if (deal.DealType == DealType.Sell)
+                            {
+                                <a href="@Url.Action("UpdateSell", new {dealId = deal.DealId})" class="btn btn-warning">Редактировать</a>
+                            }
+                            <form asp-action="Delete" id="deleteObject@(deal.DealId)" style="display: inline">
+                                <input type="hidden" name="objectId" value="@deal.DealId" />
+                                <button class="btn btn-danger" type="button" onclick="deleteObject('#deleteObject@(deal.DealId)')"><span class="glyphicon glyphicon-trash"></span></button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+            @Html.Partial("_ConfirmAlert")
+        </table>
+    </div>
+</div>

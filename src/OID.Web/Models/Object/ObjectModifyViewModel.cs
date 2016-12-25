@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace OID.Web.Models
+namespace OID.Web.Models.Object
 {
     public class ObjectModifyViewModel
     {

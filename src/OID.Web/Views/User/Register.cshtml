@@ -1,6 +1,7 @@
 ﻿@using System.Threading.Tasks
 @using OID.Web.Models
-@model RegisterViewModel
+@using OID.Web.Models.User
+@model OID.Web.Models.User.RegisterViewModel
 
 <form asp-controller="User" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-horizontal">
     <h4>Создание нового аккаунта.</h4>

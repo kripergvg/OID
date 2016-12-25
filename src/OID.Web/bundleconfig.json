@@ -15,7 +15,9 @@
       "wwwroot/js/delevery.js",
       "wwwroot/js/regions.js",
       "wwwroot/js/dealObject.js",
-      "wwwroot/js/alert.js"
+      "wwwroot/js/alert.js",
+      "wwwroot/js/dealObjectsList.js",
+      "wwwroot/js/dealList.js"
     ],
     // Optionally specify minification options
     "minify": {

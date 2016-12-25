@@ -9,7 +9,6 @@ using OID.DataProvider.Models.Deal;
 using OID.DataProvider.Models.Object;
 using OID.DataProvider.Models.Object.In;
 using OID.SoapDataProvider.Providers.Infrastructure;
-using DealObject = OID.DataProvider.Models.Object.In.DealObject;
 
 namespace OID.SoapDataProvider.Providers
 {
@@ -17,96 +16,98 @@ namespace OID.SoapDataProvider.Providers
     {
         private readonly IUserSessionQueryExecutorDecorator _sessionQueryExecutor;
         private readonly IAppQueryExecutorDecorator _queryExecutorDecorator;
+        private readonly ISoapParser _soapParser;
 
-        public DealObjectProvider(IUserSessionQueryExecutorDecorator sessionQueryExecutor, IAppQueryExecutorDecorator queryExecutorDecorator)
+        public DealObjectProvider(IUserSessionQueryExecutorDecorator sessionQueryExecutor, IAppQueryExecutorDecorator queryExecutorDecorator, ISoapParser soapParser)
         {
             _sessionQueryExecutor = sessionQueryExecutor;
             _queryExecutorDecorator = queryExecutorDecorator;
+            _soapParser = soapParser;
         }
 
-        public async Task<DataProviderModel<UpsertObjectModel>> Upsert(DealObject dealObject)
-        {
-            var queryIdentifier1 = Guid.NewGuid().ToString();
-            var query1 = new Query(queryIdentifier1, "UpsertUserObject");
-            query1.Parameters.Add(new QueryParameter("in", "ObjectCategory_Id", dealObject.ObjectCategoryId, SqlDbType.Int));
-            query1.Parameters.Add(new QueryParameter("in", "ObjectStatus_Id", dealObject.ObjectStatusId, SqlDbType.Int));
-            query1.Parameters.Add(new QueryParameter("in", "ObjectName", dealObject.ObjectName, SqlDbType.NVarChar));
+        //public async Task<DataProviderModel<UpsertObjectModel>> Upsert(DealObject dealObject)
+        //{
+        //    var queryIdentifier1 = Guid.NewGuid().ToString();
+        //    var query1 = new Query(queryIdentifier1, "UpsertUserObject");
+        //    query1.Parameters.Add(new QueryParameter("in", "ObjectCategory_Id", dealObject.ObjectCategoryId, SqlDbType.Int));
+        //    query1.Parameters.Add(new QueryParameter("in", "ObjectStatus_Id", dealObject.ObjectStatusId, SqlDbType.Int));
+        //    query1.Parameters.Add(new QueryParameter("in", "ObjectName", dealObject.ObjectName, SqlDbType.NVarChar));
 
-            if (!string.IsNullOrEmpty(dealObject.Description))
-            {
-                query1.Parameters.Add(new QueryParameter("in", "Description", dealObject.Description, SqlDbType.NVarChar));
-            }
+        //    if (!string.IsNullOrEmpty(dealObject.Description))
+        //    {
+        //        query1.Parameters.Add(new QueryParameter("in", "Description", dealObject.Description, SqlDbType.NVarChar));
+        //    }
 
-            if (dealObject.ObjectId != null)
-            {
-                query1.Parameters.Add(new QueryParameter("in", "Object_Id", dealObject.ObjectId, SqlDbType.Int));
-            }
-            var listQuery = new List<Query>
-            {
-                query1
-            };
+        //    if (dealObject.ObjectId != null)
+        //    {
+        //        query1.Parameters.Add(new QueryParameter("in", "Object_Id", dealObject.ObjectId, SqlDbType.Int));
+        //    }
+        //    var listQuery = new List<Query>
+        //    {
+        //        query1
+        //    };
 
-            var queryIdentifier2 = Guid.NewGuid().ToString();
-            var query2 = new Query(queryIdentifier2, "UpsertCheckList");
-            query2.ParentQueryGUID.Add(queryIdentifier1);
-            query2.Parameters.Add(new QueryParameter("in", "CheckListName", "Лист проверок", SqlDbType.NVarChar));
+        //    var queryIdentifier2 = Guid.NewGuid().ToString();
+        //    var query2 = new Query(queryIdentifier2, "UpsertCheckList");
+        //    query2.ParentQueryGUID.Add(queryIdentifier1);
+        //    query2.Parameters.Add(new QueryParameter("in", "CheckListName", "Лист проверок", SqlDbType.NVarChar));
 
-            if (dealObject.CheckListId != null)
-            {
-                query2.Parameters.Add(new QueryParameter("in", "CheckList_Id", dealObject.CheckListId, SqlDbType.Int));
-            }
+        //    if (dealObject.CheckListId != null)
+        //    {
+        //        query2.Parameters.Add(new QueryParameter("in", "CheckList_Id", dealObject.CheckListId, SqlDbType.Int));
+        //    }
 
-            listQuery.Add(query2);
+        //    listQuery.Add(query2);
 
-            foreach (var dealCheck in dealObject.CheckList)
-            {
-                var queryIdentifier = Guid.NewGuid().ToString();
-                Query query;
+        //    foreach (var dealCheck in dealObject.CheckList)
+        //    {
+        //        var queryIdentifier = Guid.NewGuid().ToString();
+        //        Query query;
 
-                if (dealCheck.Deleted)
-                {
-                    query = new Query(queryIdentifier, "DeleteCheck");
-                    query.ParentQueryGUID.Add(queryIdentifier2);
-                    query.Parameters.Add(new QueryParameter("in", "Check_Id", dealCheck.CheckId, SqlDbType.Int));
-                }
-                else
-                {
+        //        if (dealCheck.Deleted)
+        //        {
+        //            query = new Query(queryIdentifier, "DeleteCheck");
+        //            query.ParentQueryGUID.Add(queryIdentifier2);
+        //            query.Parameters.Add(new QueryParameter("in", "Check_Id", dealCheck.CheckId, SqlDbType.Int));
+        //        }
+        //        else
+        //        {
 
-                    query = new Query(queryIdentifier, "UpsertCheck");
-                    query.ParentQueryGUID.Add(queryIdentifier2);
-                    query.Parameters.Add(new QueryParameter("in", "CheckType_Id", dealCheck.CheckTypeId, SqlDbType.Int));
-                    query.Parameters.Add(new QueryParameter("in", "Task", dealCheck.Task, SqlDbType.NVarChar));
-                    if (!String.IsNullOrWhiteSpace(dealCheck.TaskLink))
-                    {
-                        query.Parameters.Add(new QueryParameter("in", "TaskLink", dealCheck.TaskLink, SqlDbType.NVarChar));
-                    }
+        //            query = new Query(queryIdentifier, "UpsertCheck");
+        //            query.ParentQueryGUID.Add(queryIdentifier2);
+        //            query.Parameters.Add(new QueryParameter("in", "CheckType_Id", dealCheck.CheckTypeId, SqlDbType.Int));
+        //            query.Parameters.Add(new QueryParameter("in", "Task", dealCheck.Task, SqlDbType.NVarChar));
+        //            if (!String.IsNullOrWhiteSpace(dealCheck.TaskLink))
+        //            {
+        //                query.Parameters.Add(new QueryParameter("in", "TaskLink", dealCheck.TaskLink, SqlDbType.NVarChar));
+        //            }
 
-                    if (dealCheck.CheckId != null)
-                    {
-                        query.Parameters.Add(new QueryParameter("in", "Check_Id", dealCheck.CheckId, SqlDbType.Int));
-                    }
-                }
-                listQuery.Add(query);
-            }
+        //            if (dealCheck.CheckId != null)
+        //            {
+        //                query.Parameters.Add(new QueryParameter("in", "Check_Id", dealCheck.CheckId, SqlDbType.Int));
+        //            }
+        //        }
+        //        listQuery.Add(query);
+        //    }
 
-            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
+        //    var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
 
-            var model = new DataProviderModel<UpsertObjectModel>(result.ResultMessage);
+        //    var model = new DataProviderModel<UpsertObjectModel>(result.ResultMessage);
 
-            foreach (var q11 in result.Queries)
-            {
-                if (q11.Name == "UpsertUserObject")
-                {
-                    if (q11.Parameters.Exists(x => x.Code == "Object_Id"))
-                    {
-                        model.Model = new UpsertObjectModel(q11.Parameters.Find(x => x.Code == "Object_Id").Value);
-                    }
+        //    foreach (var q11 in result.Queries)
+        //    {
+        //        if (q11.Name == "UpsertUserObject")
+        //        {
+        //            if (q11.Parameters.Exists(x => x.Code == "Object_Id"))
+        //            {
+        //                model.Model = new UpsertObjectModel(q11.Parameters.Find(x => x.Code == "Object_Id").Value);
+        //            }
 
-                }
-            }
+        //        }
+        //    }
 
-            return model;
-        }
+        //    return model;
+        //}
 
         public async Task<DataProviderVoidModel> Approve(string dealId)
         {
@@ -124,12 +125,25 @@ namespace OID.SoapDataProvider.Providers
             return new DataProviderVoidModel(result.ResultMessage);
         }
 
-        public async Task<DataProviderModel<List<UserObject>>> GetUserObjects()
+        public async Task<DataProviderModel<List<UserObject>>> GetUserObjects(bool onlyNotBlocked = false, DealType? dealType = null)
         {
             List<Query> listQuery = new List<Query>();
 
             string q_guid = Guid.NewGuid().ToString();
             Query query = new Query(q_guid, "GetUserObjects");
+            var parametrs = new List<QueryParameter>();
+            if (onlyNotBlocked)
+            {
+                parametrs.Add(new QueryParameter("in", "isBlocked", "N"));
+            }
+
+            if (dealType.HasValue)
+            {
+                var objectStatusCode = dealType == DealType.Buy ? "forB" : "forS";
+                parametrs.Add(new QueryParameter("in", "ObjectStatusCode", objectStatusCode));
+            }
+            query.Parameters = parametrs;
+
             listQuery.Add(query);
 
             var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
@@ -159,6 +173,51 @@ namespace OID.SoapDataProvider.Providers
             }
 
             return new DataProviderModel<List<UserObject>>(result.ResultMessage, objects);
+        }
+
+        public async Task<DataProviderModel<List<DealObject>>> GetDealObjects(int dealId)
+        {
+            List<Query> listQuery = new List<Query>();
+
+            string q_guid = Guid.NewGuid().ToString();
+            Query query = new Query(q_guid, "GetDealObjects");
+            var parametrs = new List<QueryParameter> { new QueryParameter("in", "Deal_Id", dealId.ToString()) };
+            query.Parameters = parametrs;
+
+            listQuery.Add(query);
+
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
+
+            var dealObjectsQuery = result.Queries.FirstOrDefault(q => q.Name == "GetDealObjects");
+
+            var objects = new List<DealObject>();
+            if (dealObjectsQuery != null)
+            {
+                var dataTable = dealObjectsQuery.RetTable;
+
+                foreach (DataRow objectRow in dataTable.Rows)
+                {
+                    objects.Add(new DealObject(
+                        objectRow["DealObject_Id"].GetInt(),
+                        objectRow["Deal_Id"].GetInt(),
+                        objectRow["Object_Id"].GetInt(),
+                        objectRow["ObjectName"].ToString(),
+                        objectRow["Description"].ToString(),
+                        objectRow["User_Id"].GetInt(),
+                        objectRow["CheckList_Id"].GetInt(),
+                        _soapParser.BoolParse(objectRow["IsApprovedByPartner"].ToString()),
+                        _soapParser.BoolParse(objectRow["IsApprovedByMe"].ToString()),
+                        objectRow["CreateDate"].GetDateTime(),
+                        objectRow["ChangeDate"].GetDateTime(),
+                        objectRow["CheckStatus_Id"].GetInt(),
+                        _soapParser.BoolParse(objectRow["Blocked"].ToString()),
+                        objectRow["ObjectCategory_Id"].GetInt(),
+                        objectRow["ObjectStatus_Id"].GetInt()
+                    ));
+                }
+            }
+
+            return new DataProviderModel<List<DealObject>>(result.ResultMessage, objects);
         }
 
         public async Task<DataProviderModel<List<ObjectCategory>>> GetCategories()

@@ -1,0 +1,8 @@
+﻿@using System.Threading.Tasks
+@model OID.Web.Models.Deal.UpdateSellDealViewModel
+
+<form method="post" asp-action="UpdateSell">
+    <input type="hidden" asp-for="DealId"/>
+    @Html.Partial("Partials/SellDealPartial", Model.SellDealModel)
+    <button type="submit" class="btn-success btn">Сохранить</button>
+</form>

@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.DotNet.Cli.Utils;
 using OID.Core;
 using OID.Core.HashGenerator;
 using OID.DataProvider.Interfaces;
@@ -14,6 +12,8 @@ using OID.DataProvider.Models;
 using OID.DataProvider.Models.User;
 using OID.DataProvider.Models.User.In;
 using OID.Web.Models;
+using OID.Web.Models.Partials;
+using OID.Web.Models.User;
 using Constants = OID.Web.Core.Constants;
 using UserModel = OID.Core.UserModel;
 
@@ -117,10 +117,46 @@ namespace OID.Web.Controllers
             var userPhonesTask = _userProvider.GetUserPhones();
 
             var user = (await userTask).Model;
+           
+            var deleveryType = AddressType.City;
+            if (user.DeleveryLocationType.HasValue)
+            {
+                deleveryType = (AddressType) user.DeleveryLocationType;
+            }
 
             string regionCode = String.IsNullOrEmpty(user.RegionCode) ? Constants.MOSCOW_KLADR : user.RegionCode;
-            model.RegionCode = regionCode;
-            model.RegionList = new SelectList((await regionsTask).Model.OrderBy(l => l.Name), "Code", "Name", regionCode);
+
+            var locationTask = _regionProvider.GetLocalities(regionCode);
+            var cityTask = _regionProvider.GetLocationsByRegion(regionCode);
+
+            var cityRequest = await cityTask;
+            string cityCode = String.IsNullOrEmpty(user.CityCode) ? cityRequest.Model.First().Code : user.CityCode;
+
+            var localitiesRequest = await locationTask;
+            string localityCode = String.IsNullOrEmpty(user.LocalityCode) ? localitiesRequest.Model.First().Code : user.LocalityCode;
+
+            var locationRequest = await _regionProvider.GetLocationsByLocality(localityCode);
+            string locationCode = String.IsNullOrEmpty(user.CityCode) ? locationRequest.Model.First().Code : user.CityCode;
+
+            model.AddressModel =  new AddressViewModel(nameof(model.AddressModel))
+            {
+                RegionCode = regionCode,
+                RegionList = new SelectList((await regionsTask).Model.OrderBy(l => l.Name), "Code", "Name", regionCode),
+                DeliveryLocationType = deleveryType,
+                City = new CityViewModel
+                {
+                    CityCode = cityCode,
+                    CityList = new SelectList(cityRequest.Model.OrderBy(l => l.Name), "Code", "Name", cityCode)
+                },
+                Locality = new LocalityViewModel
+                {
+                    LocalityList = new SelectList(localitiesRequest.Model.OrderBy(l => l.Name), "Code", "Name", localityCode),
+                    LocalityCode = user.LocalityCode,
+                    LocationList = new SelectList(locationRequest.Model.OrderBy(l => l.Name), "Code", "Name", locationCode),
+                    LocationCode = user.CityCode
+                },
+                Address = user.Address
+            };            
 
             var userPhones = (await userPhonesTask).Model;
 
@@ -128,43 +164,7 @@ namespace OID.Web.Controllers
             model.PhoneWork = _mapper.Map<PhoneViewModel>(userPhones.Work);
             model.PhoneHome = _mapper.Map<PhoneViewModel>(userPhones.Home);
             model.PhoneAdditional = _mapper.Map<PhoneViewModel>(userPhones.Additional);
-
-            var deleveryType = AddressType.City;
-            if (user.DeleveryLocationType.HasValue)
-            {
-                deleveryType = (AddressType) user.DeleveryLocationType;
-            }
-
-            model.DeliveryLocationType = deleveryType;
-
-            var locationTask = _regionProvider.GetLocalities(regionCode);
-            var cityTask = _regionProvider.GetLocationsByRegion(regionCode);
-
-            var localitiesRequest = await locationTask;
-            string localityCode = String.IsNullOrEmpty(user.LocalityCode) ? localitiesRequest.Model.First().Code : user.LocalityCode;
-
-            var cityRequest = await cityTask;
-            string cityCode = String.IsNullOrEmpty(user.CityCode) ? cityRequest.Model.First().Code : user.CityCode;
-
-            model.City = new ManageUserViewModel.CityViewModel
-            {
-                CityCode = cityCode,
-                CityList = new SelectList(cityRequest.Model.OrderBy(l => l.Name), "Code", "Name", cityCode)
-            };
-
-            var locationRequest = await _regionProvider.GetLocationsByLocality(localityCode);
-            string locationCode = String.IsNullOrEmpty(user.CityCode) ? locationRequest.Model.First().Code : user.CityCode;
-
-            model.Locality = new ManageUserViewModel.LocalityViewModel
-            {
-                LocalityList = new SelectList(localitiesRequest.Model.OrderBy(l => l.Name), "Code", "Name", localityCode),
-                LocalityCode = user.LocalityCode,
-                LocationList = new SelectList(locationRequest.Model.OrderBy(l => l.Name), "Code", "Name", locationCode),
-                LocationCode = user.CityCode
-            };
-
-            model.Address = user.Address;
-
+      
             return View(model);
         }
 
@@ -176,10 +176,10 @@ namespace OID.Web.Controllers
             {
                 var userPhones = (await _userProvider.GetUserPhones()).Model;
 
-                var cityCode = model.DeliveryLocationType == AddressType.City ? model.City.CityCode : model.Locality.LocationCode;
+                var cityCode = model.AddressModel.DeliveryLocationType == AddressType.City ? model.AddressModel.City.CityCode : model.AddressModel.Locality.LocationCode;
 
-                await _userProvider.UpdatetUserAddress(new UpdateUserAddressModel(cityCode, model.Locality.LocalityCode, model.RegionCode, (DeleveryLocationType?) model.DeliveryLocationType,
-                     model.Address));
+                await _userProvider.UpdatetUserAddress(new UpdateUserAddressModel(cityCode, model.AddressModel.Locality.LocalityCode, model.AddressModel.RegionCode, (DeleveryLocationType?) model.AddressModel.DeliveryLocationType,
+                     model.AddressModel.Address));
 
                 var homePhoneTask = ChangePhone(userPhones.Home, model.PhoneHome, PhoneType.Home);
                 var additionalPhoneTask = ChangePhone(userPhones.Additional, model.PhoneAdditional, PhoneType.Additional);

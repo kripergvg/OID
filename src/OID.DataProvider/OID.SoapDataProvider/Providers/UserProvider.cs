@@ -8,7 +8,6 @@ using OID.DataProvider.Models;
 using OID.DataProvider.Models.User;
 using OID.DataProvider.Models.User.In;
 using OID.SoapDataProvider.Providers.Infrastructure;
-using UserModel = OID.Core.UserModel;
 
 namespace OID.SoapDataProvider.Providers
 {
@@ -127,7 +126,7 @@ namespace OID.SoapDataProvider.Providers
 
                 if (user.DeleveryLocationType == DeleveryLocationType.Location && user.LocalityCode != null)
                 {
-                    q1.Parameters.Add(new QueryParameter("in", "CityCode", user.CityCode, SqlDbType.NVarChar));
+                    q1.Parameters.Add(new QueryParameter("in", "CityCode", user.LocalityCode, SqlDbType.NVarChar));
                 }
 
                 queries.Add(q1);
@@ -277,6 +276,64 @@ namespace OID.SoapDataProvider.Providers
             }
 
             return new DataProviderModel<UserPhonesModel>(result.ResultMessage);
+        }
+
+        public async Task<DataProviderModel<List<UserAccount>>> GetUserAccounts()
+        {
+            var queryIdentifier1 = Guid.NewGuid().ToString();
+            var query1 = new Query(queryIdentifier1, "GetUserAccounts");
+            var listQuery = new List<Query> { query1 };
+
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
+
+            var getUserAccountsQuery = result.Queries.First(q => q.Name == "GetUserAccounts");
+
+            var dataTable = getUserAccountsQuery.RetTable;
+
+            var userAccounts = new List<UserAccount>();
+            foreach (DataRow row in dataTable.Rows)
+            {
+                var paymentType = PaymentType.Yandex;
+                switch (int.Parse(row["PaymentCptyService_Id"].ToString()))
+                {
+                    case 2:
+                        paymentType = PaymentType.Yandex;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("PaymentCptyService_Id");
+                }
+
+                userAccounts.Add(new UserAccount(
+                    row["UserAccount_Id"].GetInt(),
+                    row["Account_Id"].GetInt(),
+                    paymentType,
+                    row["AccountNumber"].GetInt(),
+                    row["CreateDate"].GetDateTime()));
+
+
+            }
+
+            return new DataProviderModel<List<UserAccount>>(result.ResultMessage, userAccounts);
+        }
+
+        public async Task<DataProviderModel<CreateUserAccountModel>> CreateUserAccount(int accountNumber, PaymentType paymentType)
+        {
+            var guid = Guid.NewGuid().ToString();
+            var q1 = new Query(guid, "InsertUserAccount");
+            q1.Parameters.Add(new QueryParameter("in", "CptyService_Id", ((int)paymentType).ToString(), SqlDbType.Int));
+            q1.Parameters.Add(new QueryParameter("in", "AccountNumber", accountNumber.ToString(), SqlDbType.NVarChar));
+
+            var queries = new List<Query> { q1 };
+
+            var result = await _sessionQueryExecutor.Execute(queries).ConfigureAwait(false);
+
+            var createUserAccountQuery = result.Queries.FirstOrDefault(q => q.Name == "InsertUserAccount");
+            if (createUserAccountQuery != null)
+            {
+                
+            }
+
+            return new DataProviderModel<CreateUserAccountModel>(result.ResultMessage);
         }
 
         private static Query AccountToQuery(Account acc)
