@@ -25,5 +25,7 @@ namespace OID.DataProvider.Interfaces
         Task<DataProviderModel<List<DeleveryType>>> GetDeleveryTypes();
 
         Task<DataProviderVoidModel> UpdateDeal(DealUpdateModel updateModel, DealType dealType);
+
+        Task<DataProviderModel<CreateDealModel>> CreateDeal(DealCreateModel createModel, DealType dealType);
     }
 }

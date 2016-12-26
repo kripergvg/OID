@@ -21,7 +21,7 @@ namespace OID.Web.Core.MappingProfiles
                 .ForMember(d => d.CheckType, s => s.MapFrom(src => (CheckType) src.CheckType))
                 .ForMember(d => d.Description, s => s.MapFrom(src => src.Task));
             CreateMap<DealModel, DealViewModel>();
-            CreateMap<DealObject, SellDealModifyViewModel.SelectedDealObject>()
+            CreateMap<DealObject, SelectedDealObject>()
                 .ForMember(d => d.Name, s => s.MapFrom(src => src.ObjectName));
         }
     }

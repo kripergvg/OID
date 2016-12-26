@@ -52,48 +52,70 @@ namespace OID.Web.Controllers
             return RedirectToIndex();
         }
 
+        public async Task<IActionResult> UpdateBuy(int dealId)
+        {
+            var dealModifyModel = await CreateUpdateDealModel(dealId);
+
+            var model = new UpdateBuyDealViewModel
+            {
+                DealId = dealId,
+                DealModel = dealModifyModel
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateBuy(int dealId, DealModifyModel modfyModel)
+        {
+            var currentDeliveryObjectsTask = _dealObjectProvider.GetDealObjects(dealId);
+
+            var currentDeliveryObjects = (await currentDeliveryObjectsTask).Model;
+
+            var objectsToDelete = currentDeliveryObjects
+                .Where(c => modfyModel.SelectedDealObjects.All(s => s.ObjectId != c.ObjectId))
+                .Select(o => o.DealObjectId)
+                .ToList();
+
+            var objectsToAdd = modfyModel.SelectedDealObjects
+                .Where(s => currentDeliveryObjects.All(c => c.ObjectId != s.ObjectId))
+                .Select(o => o.ObjectId)
+                .ToList();
+
+            var updateModel = new DealUpdateModel(dealId, objectsToDelete, objectsToAdd, modfyModel.Price, modfyModel.Comment, null, modfyModel.DeleveryTypeId,
+                modfyModel.Size, modfyModel.Weight, modfyModel.AddressModel.City.CityCode, modfyModel.AddressModel.Locality.LocalityCode,
+                modfyModel.AddressModel.RegionCode, modfyModel.AddressModel.Address, (DeleveryLocationType) modfyModel.AddressModel.DeliveryLocationType);
+
+            await _dealProvider.UpdateDeal(updateModel, DealType.Buy);
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> CreateBuy()
+        {
+            var model = await CreateDealModifyModel(DealType.Buy);
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateBuy(DealModifyModel model)
+        {
+            var objectIdsToAdd = model.SelectedDealObjects
+                .Select(o => o.ObjectId)
+                .ToList();
+
+            var createModel = new DealCreateModel(model.Price, model.Comment, null, model.DeleveryTypeId, model.Size,
+                model.Weight, model.AddressModel.City.CityCode, model.AddressModel.Locality.LocalityCode, model.AddressModel.RegionCode,
+                model.AddressModel.Address, (DeleveryLocationType) model.AddressModel.DeliveryLocationType, objectIdsToAdd);
+
+            await _dealProvider.CreateDeal(createModel, DealType.Buy);
+
+            return RedirectToAction(nameof(Index));
+        }
+
         public async Task<IActionResult> UpdateSell(int dealId)
         {
-            var dealObjectsTask = _dealObjectProvider.GetDealObjects(dealId);
-            var dealTask = _dealProvider.GetDeal(dealId);
-            var dealDeliveryTask = _dealProvider.GetDealDelevery(dealId);
-            var sellModifyModelTask = CreateSellModel();
-
-            await Task.WhenAll(dealObjectsTask, dealObjectsTask, dealTask, sellModifyModelTask);
-
-            var sellModifyModel = sellModifyModelTask.Result;
-            var deal = dealTask.Result.Model;
-            var dealDelevery = dealDeliveryTask.Result.Model;
-            var dealObjects = dealObjectsTask.Result.Model;
-
-            sellModifyModel.Comment = deal.Comment;
-            sellModifyModel.Price = deal.Price;
-            sellModifyModel.Size = dealDelevery.SizeDeclire;
-            sellModifyModel.SelectedDealObjects = _mapper.Map<List<SellDealModifyViewModel.SelectedDealObject>>(dealObjects);
-            sellModifyModel.Weight = dealDelevery.WeightDeclire;
-
-            sellModifyModel.AccountNumber = deal.AccountId;
-            if (deal.AccountId.HasValue)
-            {
-                sellModifyModel.AccountAction = AccountAction.Existed;
-
-                foreach (var userAccount in sellModifyModel.UserAccounts)
-                {
-                    if (userAccount.Value == deal.AccountId.Value.ToString())
-                    {
-                        userAccount.Selected = true;
-                    }
-                }
-            }
-
-            sellModifyModel.DeleveryTypeId = dealDelevery.DeliveryCptyServiceId;
-            foreach (var deleveryType in sellModifyModel.DeleveryTypes)
-            {
-                if (deleveryType.Value == dealDelevery.DeliveryCptyServiceId.ToString())
-                {
-                    deleveryType.Selected = true;
-                }
-            }
+            var sellModifyModel = await CreateUpdateDealModel(dealId);
 
             var model = new UpdateSellDealViewModel
             {
@@ -111,7 +133,7 @@ namespace OID.Web.Controllers
             var createUserAccountTask = Task.FromResult(new DataProviderModel<CreateUserAccountModel>(new ResultMessage(0, MessageType.Information, "")));
             if (modfyModel.AccountAction == AccountAction.New)
             {
-                createUserAccountTask = _userProvider.CreateUserAccount(modfyModel.AccountNumber.Value, modfyModel.PaymentType);
+                createUserAccountTask = _userProvider.CreateUserAccount(modfyModel.PaymentNumber.Value, modfyModel.PaymentType);
             }
 
             await Task.WhenAll(currentDeliveryObjectsTask, createUserAccountTask);
@@ -129,14 +151,14 @@ namespace OID.Web.Controllers
                 .Select(o => o.ObjectId)
                 .ToList();
 
-            var accountId = modfyModel.AccountAction == AccountAction.Existed ? modfyModel.AccountNumber.Value : createUserAccount.AccountId;
+            var accountId = modfyModel.AccountAction == AccountAction.Existed ? modfyModel.UserAccountId.Value : createUserAccount.AccountId;
 
             var updateModel = new DealUpdateModel(dealId, objectsToDelete, objectsToAdd, modfyModel.Price, modfyModel.Comment, accountId, modfyModel.DeleveryTypeId,
                 modfyModel.Size, modfyModel.Weight, modfyModel.AddressModel.City.CityCode, modfyModel.AddressModel.Locality.LocalityCode,
                 modfyModel.AddressModel.RegionCode, modfyModel.AddressModel.Address, (DeleveryLocationType) modfyModel.AddressModel.DeliveryLocationType);
 
             await _dealProvider.UpdateDeal(updateModel, DealType.Sell);
-        
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -149,7 +171,26 @@ namespace OID.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateSell(SellDealModifyViewModel model)
         {
-            return View();
+            var createUserAccountTask = Task.FromResult(new DataProviderModel<CreateUserAccountModel>(new ResultMessage(0, MessageType.Information, "")));
+            if (model.AccountAction == AccountAction.New)
+            {
+                createUserAccountTask = _userProvider.CreateUserAccount(model.PaymentNumber.Value, model.PaymentType);
+            }
+
+            var createUserAccount = (await createUserAccountTask).Model;
+
+            var accountId = model.AccountAction == AccountAction.Existed ? model.UserAccountId.Value : createUserAccount.AccountId;
+            var objectIdsToAdd = model.SelectedDealObjects
+                .Select(o => o.ObjectId)
+                .ToList();
+
+            var createModel = new DealCreateModel(model.Price, model.Comment, accountId, model.DeleveryTypeId, model.Size,
+                model.Weight, model.AddressModel.City.CityCode, model.AddressModel.Locality.LocalityCode, model.AddressModel.RegionCode,
+                model.AddressModel.Address, (DeleveryLocationType) model.AddressModel.DeliveryLocationType, objectIdsToAdd);
+
+            await _dealProvider.CreateDeal(createModel, DealType.Sell);
+
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> ViewDeal(int dealId)
@@ -157,15 +198,16 @@ namespace OID.Web.Controllers
             return View();
         }
 
-        private async Task<SellDealModifyViewModel> CreateSellModel()
+        //public async Task<IActionResult> UpdateBuy()
+
+        private async Task<DealModifyModel> CreateDealModifyModel(DealType dealType)
         {
-            var freeObjectsTask = _dealObjectProvider.GetUserObjects(true, DealType.Sell);
+            var freeObjectsTask = _dealObjectProvider.GetUserObjects(true, dealType);
             var userTask = _userProvider.GetUser();
             var regionsTask = _regionProvider.GetRegions();
             var deliveryTypesTask = _dealProvider.GetDeleveryTypes();
-            var accountsTask = _userProvider.GetUserAccounts();
 
-            await Task.WhenAll(freeObjectsTask, userTask, regionsTask, deliveryTypesTask, accountsTask);
+            await Task.WhenAll(freeObjectsTask, userTask, regionsTask, deliveryTypesTask);
 
             var user = userTask.Result.Model;
 
@@ -181,7 +223,6 @@ namespace OID.Web.Controllers
             var cities = cityTask.Result.Model;
             var regions = regionsTask.Result.Model;
             var deliveryTypes = deliveryTypesTask.Result.Model;
-            var accounts = accountsTask.Result.Model;
 
             var deleveryType = AddressType.City;
             if (user.DeleveryLocationType.HasValue)
@@ -193,13 +234,7 @@ namespace OID.Web.Controllers
             string localityCode = String.IsNullOrEmpty(user.LocalityCode) ? locations.First().Code : user.LocalityCode;
             string locationCode = String.IsNullOrEmpty(user.CityCode) ? locations.First().Code : user.CityCode;
 
-            var accountsFormatted = accounts.Select(a => new SelectItem
-            {
-                Value = a.AccountId,
-                Text = $"{a.PaymentService.GetHumanName()} {a.AccountNumber}"
-            });
-
-            return new SellDealModifyViewModel
+            return new DealModifyModel
             {
                 AddressModel = new AddressViewModel(nameof(SellDealModifyViewModel.AddressModel))
                 {
@@ -221,9 +256,77 @@ namespace OID.Web.Controllers
                     RegionList = new SelectList(regions.OrderBy(l => l.Name), "Code", "Name", regionCode),
                 },
                 DeleveryTypes = new SelectList(deliveryTypes, "DeliveryId", "Name"),
-                FreeDealObjects = new SelectList(freeObjects, "ObjectId", "Name"),
-                UserAccounts = new SelectList(accountsFormatted, nameof(SelectItem.Value), nameof(SelectItem.Text))
+                FreeDealObjects = new SelectList(freeObjects, "ObjectId", "Name")
             };
+        }
+
+        private async Task<SellDealModifyViewModel> CreateSellModel()
+        {
+            var createModifyModelTask = CreateDealModifyModel(DealType.Sell);
+
+            var accountsTask = _userProvider.GetUserAccounts();
+
+            await Task.WhenAll(createModifyModelTask, accountsTask);
+
+            var modifyModel = createModifyModelTask.Result;
+            var accounts = accountsTask.Result.Model;
+
+            var sellDealModel = _mapper.Map<SellDealModifyViewModel>(modifyModel);
+
+            var accountsFormatted = accounts.Select(a => new SelectItem
+            {
+                Value = a.AccountId,
+                Text = $"{a.PaymentService.GetHumanName()} {a.AccountNumber}"
+            });
+
+            sellDealModel.UserAccounts = new SelectList(accountsFormatted, nameof(SelectItem.Value), nameof(SelectItem.Text));
+
+            return sellDealModel;
+        }
+
+        private async Task<SellDealModifyViewModel> CreateUpdateDealModel(int dealId)
+        {
+            var dealObjectsTask = _dealObjectProvider.GetDealObjects(dealId);
+            var dealTask = _dealProvider.GetDeal(dealId);
+            var dealDeliveryTask = _dealProvider.GetDealDelevery(dealId);
+            var sellModifyModelTask = CreateSellModel();
+
+            await Task.WhenAll(dealObjectsTask, dealObjectsTask, dealTask, sellModifyModelTask);
+
+            var sellModifyModel = sellModifyModelTask.Result;
+            var deal = dealTask.Result.Model;
+            var dealDelevery = dealDeliveryTask.Result.Model;
+            var dealObjects = dealObjectsTask.Result.Model;
+
+            sellModifyModel.Comment = deal.Comment;
+            sellModifyModel.Price = deal.Price;
+            sellModifyModel.Size = dealDelevery.SizeDeclire;
+            sellModifyModel.SelectedDealObjects = _mapper.Map<List<SelectedDealObject>>(dealObjects);
+            sellModifyModel.Weight = dealDelevery.WeightDeclire;
+
+            sellModifyModel.UserAccountId = deal.AccountId;
+            if (deal.AccountId.HasValue)
+            {
+                sellModifyModel.AccountAction = AccountAction.Existed;
+
+                foreach (var userAccount in sellModifyModel.UserAccounts)
+                {
+                    if (userAccount.Value == deal.AccountId.Value.ToString())
+                    {
+                        userAccount.Selected = true;
+                    }
+                }
+            }
+
+            sellModifyModel.DeleveryTypeId = dealDelevery.DeliveryCptyServiceId;
+            foreach (var deleveryType in sellModifyModel.DeleveryTypes)
+            {
+                if (deleveryType.Value == dealDelevery.DeliveryCptyServiceId.ToString())
+                {
+                    deleveryType.Selected = true;
+                }
+            }
+            return sellModifyModel;
         }
     }
 }

@@ -3,14 +3,11 @@ using OID.DataProvider.Models.User;
 
 namespace OID.DataProvider.Models.Deal.In
 {
-    public class DealUpdateModel
+    public class DealCreateModel
     {
-        public DealUpdateModel(int dealId, List<int> dealObjectIdsToDelete, List<int> objectIdsToAdd, double price, string comment, int? accountId, int deliveryTypeId,
-            Size size, int weight, string cityCode, string localityCode, string regionCode, string address, DeleveryLocationType deleveryLocationType)
+        public DealCreateModel(double price, string comment, int? accountId, int deliveryTypeId, Size size, int weight, string cityCode, string localityCode,
+            string regionCode, string address, DeleveryLocationType deleveryLocationType, List<int> objectIdsToAdd)
         {
-            DealId = dealId;
-            DealObjectIdsToDelete = dealObjectIdsToDelete;
-            ObjectIdsToAdd = objectIdsToAdd;
             Price = price;
             Comment = comment;
             AccountId = accountId;
@@ -22,13 +19,8 @@ namespace OID.DataProvider.Models.Deal.In
             RegionCode = regionCode;
             Address = address;
             DeleveryLocationType = deleveryLocationType;
+            ObjectIdsToAdd = objectIdsToAdd;
         }
-
-        public int DealId { get; set; }
-
-        public List<int> DealObjectIdsToDelete { get; set; }
-
-        public List<int> ObjectIdsToAdd { get; set; }
 
         public double Price { get; set; }
 
@@ -51,5 +43,7 @@ namespace OID.DataProvider.Models.Deal.In
         public string Address { get; set; }
 
         public DeleveryLocationType DeleveryLocationType { get; set; }
+
+        public List<int> ObjectIdsToAdd { get; set; }
     }
 }

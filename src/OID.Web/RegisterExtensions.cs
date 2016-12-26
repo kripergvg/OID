@@ -15,7 +15,11 @@ namespace OID.Web
             builder.RegisterType<UserManager>().As<IUserManager>();
             builder.RegisterType<SessionUpdater>().As<ISessionUpdater>();
 
-            var config = new MapperConfiguration(expression => expression.AddProfile(new SoapToViewModelProfile()));
+            var config = new MapperConfiguration(expression =>
+            {
+                expression.AddProfile(new SoapToViewModelProfile());
+                expression.AddProfile(new ParentToChildProfile());
+            });
             builder.Register(c => new Mapper(config)).As<IMapper>();
 
             return builder;

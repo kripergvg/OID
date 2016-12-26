@@ -1,0 +1,7 @@
+﻿@model OID.Web.Models.Deal.UpdateBuyDealViewModel
+
+<form method="post">
+    <input type="hidden" asp-for="DealId" />
+    @Html.Partial("Partials/BuyDealPartial", Model.DealModel)
+    <button type="submit" class="btn-success btn">Сохранить</button>
+</form>

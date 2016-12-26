@@ -322,7 +322,10 @@ namespace OID.SoapDataProvider.Providers
             upsertDealQuery.Parameters.Add(new QueryParameter("in", "Price", updateModel.Price.ToString(), SqlDbType.Decimal));
             upsertDealQuery.Parameters.Add(new QueryParameter("in", "Comment", updateModel.Comment, SqlDbType.NVarChar));
             upsertDealQuery.Parameters.Add(new QueryParameter("in", "Deal_Id", updateModel.DealId.ToString(), SqlDbType.Int));
-            upsertDealQuery.Parameters.Add(new QueryParameter("in", "Account_Id", updateModel.AccountId.ToString(), SqlDbType.Int));
+            if (dealType == DealType.Sell)
+            {
+                upsertDealQuery.Parameters.Add(new QueryParameter("in", "Account_Id", updateModel.AccountId.ToString(), SqlDbType.Int));
+            }
             upsertDealQuery.Parameters.Add(new QueryParameter("in", "BuySell", dealType == DealType.Buy ? "B" : "S", SqlDbType.Int));
             listQuery.Add(upsertDealQuery);
 
@@ -361,6 +364,58 @@ namespace OID.SoapDataProvider.Providers
             var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
 
             return new DataProviderVoidModel(result.ResultMessage);
+        }
+
+        public async Task<DataProviderModel<CreateDealModel>> CreateDeal(DealCreateModel createModel, DealType dealType)
+        {
+            var listQuery = new List<Query>();
+
+            var upsertDealIdentifier = Guid.NewGuid().ToString();
+            var upsertDealQuery = new Query(upsertDealIdentifier, "UpsertDeal");
+            upsertDealQuery.Parameters.Add(new QueryParameter("in", "Price", createModel.Price.ToString(), SqlDbType.Decimal));
+            upsertDealQuery.Parameters.Add(new QueryParameter("in", "Comment", createModel.Comment, SqlDbType.NVarChar));
+            if (dealType == DealType.Sell)
+            {
+                upsertDealQuery.Parameters.Add(new QueryParameter("in", "Account_Id", createModel.AccountId.ToString(), SqlDbType.Int));
+            }
+            upsertDealQuery.Parameters.Add(new QueryParameter("in", "BuySell", dealType == DealType.Buy ? "B" : "S", SqlDbType.Int));
+            listQuery.Add(upsertDealQuery);
+
+            foreach (var objectId in createModel.ObjectIdsToAdd)
+            {
+                var upsertDealObjectIdentifier = Guid.NewGuid().ToString();
+                var upsertDealObjectQuery = new Query(upsertDealObjectIdentifier, "UpsertDealObject");
+                upsertDealObjectQuery.ParentQueryGUID.Add(upsertDealIdentifier);
+                upsertDealObjectQuery.Parameters.Add(new QueryParameter("in", "Object_Id", objectId.ToString(), SqlDbType.Int));
+                listQuery.Add(upsertDealObjectQuery);
+            }
+
+            var dealDeliveryIdentifier = Guid.NewGuid().ToString();
+            var dealDeliveryQuery = new Query(dealDeliveryIdentifier, "UpsertDealDelivery");
+            dealDeliveryQuery.ParentQueryGUID.Add(upsertDealIdentifier);
+            dealDeliveryQuery.Parameters.Add(new QueryParameter("in", "DeliveryCptyService_Id", createModel.DeliveryTypeId.ToString(), SqlDbType.Int));
+            dealDeliveryQuery.Parameters.Add(new QueryParameter("in", "Weight_Decl", createModel.Weight.ToString(), SqlDbType.Int));
+            dealDeliveryQuery.Parameters.Add(new QueryParameter("in", "Length_Decl", createModel.Size.Length.ToString(), SqlDbType.Int));
+            dealDeliveryQuery.Parameters.Add(new QueryParameter("in", "Height_Decl", createModel.Size.Height.ToString(), SqlDbType.Int));
+            dealDeliveryQuery.Parameters.Add(new QueryParameter("in", "Width_Decl", createModel.Size.Width.ToString(), SqlDbType.Int));
+
+            var cityCode = createModel.DeleveryLocationType == DeleveryLocationType.City ? createModel.CityCode : createModel.LocalityCode;
+            dealDeliveryQuery.Parameters.Add(new QueryParameter("in", "CityCode", cityCode, SqlDbType.NVarChar));
+            dealDeliveryQuery.Parameters.Add(new QueryParameter("in", "Address", createModel.Address, SqlDbType.NVarChar));
+            listQuery.Add(dealDeliveryQuery);
+
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
+
+            var createDealModel = new CreateDealModel();
+
+            var createDealQuery = result.Queries.FirstOrDefault(q => q.Name == "UpsertDeal");
+            var dealIdParametr = createDealQuery?.Parameters.FirstOrDefault(p => p.Direction == "out" && p.Code == "Deal_Id");
+            if (dealIdParametr != null)
+            {
+                createDealModel.DealId = int.Parse(dealIdParametr.Value);
+            }
+
+            return new DataProviderModel<CreateDealModel>(result.ResultMessage, createDealModel);
         }
 
     }

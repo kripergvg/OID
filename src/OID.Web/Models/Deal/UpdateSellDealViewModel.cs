@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace OID.Web.Models.Deal
+﻿namespace OID.Web.Models.Deal
 {
     public class UpdateSellDealViewModel
     {

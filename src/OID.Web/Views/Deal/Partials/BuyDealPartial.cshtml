@@ -3,13 +3,13 @@
 @using OID.Web.Models.Deal
 @using OID.DataProvider.Models.User
 
-@model OID.Web.Models.Deal.SellDealModifyViewModel
+@model OID.Web.Models.Deal.DealModifyModel
 
 <div class="row">
     <div class="col-md-4">
         <div class="form-group">
             <label style="display: block">Обьекты</label>
-            <select asp-items="@Model.FreeDealObjects" style="margin-bottom: 13px;width: 261px; display: inline;" id="freeDealObjects" class="form-control" @(Model.FreeDealObjects.Any()?"":"disabled") ></select>
+            <select asp-items="@Model.FreeDealObjects" style="margin-bottom: 13px;width: 261px; display: inline;" id="freeDealObjects" class="form-control" @(Model.FreeDealObjects.Any()?"":"disabled")></select>
             <button class="btn btn-info" id="addDealObject" style="display: inline" type="button" @(Model.FreeDealObjects.Any() ? "" : "disabled")>Добавить</button>
         </div>
         <div>
@@ -60,27 +60,7 @@
             <input asp-for="Size.Height" style="display: inline; width: 65px;" class="form-control" />
             <input asp-for="Size.Width" style="display: inline;width: 65px;" class="form-control" />
             <input asp-for="Size.Length" style="display: inline;width: 65px;" class="form-control" />
-        </div>
-        <div class="form-group">
-            <input asp-for="AccountAction" type="radio" data-radio-identifier="accountAction" value="@AccountAction.Existed" @(Model.AccountAction= =AccountAction.Existed?"checked":"") /> Выбрать счет
-            <input asp-for="AccountAction" type="radio" data-radio-identifier="accountAction" value="@AccountAction.New" @(Model.AccountAction= =AccountAction.New?"checked":"") /> Завести новый счет
-        </div>
-        <div data-radio-identifier="accountAction" data-region="@AccountAction.Existed" style="display: @(Model.AccountAction == AccountAction.Existed ? "block" : "none")">
-            <div class="form-group">
-                <label asp-for="UserAccountId"></label>
-                <select asp-items="Model.UserAccounts" asp-for="UserAccountId" class="form-control"></select>
-            </div>
-        </div>
-        <div data-radio-identifier="accountAction" data-region="@AccountAction.New" style="display: @(Model.AccountAction==AccountAction.New?"block":"none")">
-            <div class="form-group">
-                <label asp-for="PaymentType"></label>
-                <select asp-items="Html.GetEnumSelectList<PaymentType>()" asp-for="PaymentType" class="form-control"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="PaymentNumber"></label>
-                <input asp-for="PaymentNumber" class="form-control" />
-            </div>
-        </div>
+        </div>       
     </div>
     <div class="col-md-3 col-md-offset-1">
         <div class="form-group">

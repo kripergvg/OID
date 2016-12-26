@@ -5,11 +5,11 @@
 
 <div>
     <div class="btn-group" role="group" style="margin-bottom: 15px">
-        <a href="@Url.Action("CreateSell")" class="btn btn-lg btn-info">Хочу купить</a>
+        <a href="@Url.Action("CreateBuy")" class="btn btn-lg btn-info">Хочу купить</a>
         <a href="@Url.Action("CreateSell")" class="btn btn-lg btn-info">Хочу продать</a>
         <a href="@Url.Action("CreateSell")" class="btn btn-lg btn-info">Принять сделку</a>
     </div>
-    <div >
+    <div>
         <table class="table table-hover" id="dealList">
             <thead>
                 <tr class="active">
@@ -53,6 +53,11 @@
                             {
                                 <a href="@Url.Action("UpdateSell", new {dealId = deal.DealId})" class="btn btn-warning">Редактировать</a>
                             }
+                            else if (deal.DealType == DealType.Buy)
+                            {
+                                <a href="@Url.Action("UpdateBuy", new {dealId = deal.DealId})" class="btn btn-warning">Редактировать</a>
+                            }
+
                             <form asp-action="Delete" id="deleteObject@(deal.DealId)" style="display: inline">
                                 <input type="hidden" name="objectId" value="@deal.DealId" />
                                 <button class="btn btn-danger" type="button" onclick="deleteObject('#deleteObject@(deal.DealId)')"><span class="glyphicon glyphicon-trash"></span></button>

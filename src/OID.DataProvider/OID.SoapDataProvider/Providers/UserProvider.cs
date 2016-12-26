@@ -327,13 +327,16 @@ namespace OID.SoapDataProvider.Providers
 
             var result = await _sessionQueryExecutor.Execute(queries).ConfigureAwait(false);
 
+            var createAccountModel = new CreateUserAccountModel();
+
             var createUserAccountQuery = result.Queries.FirstOrDefault(q => q.Name == "InsertUserAccount");
-            if (createUserAccountQuery != null)
+            var accountIdParametr = createUserAccountQuery?.Parameters.FirstOrDefault(p => p.Direction == "out" && p.Code == "Account_Id");
+            if (accountIdParametr != null)
             {
-                
+                createAccountModel.AccountId = int.Parse(accountIdParametr.Value);
             }
 
-            return new DataProviderModel<CreateUserAccountModel>(result.ResultMessage);
+            return new DataProviderModel<CreateUserAccountModel>(result.ResultMessage, createAccountModel);
         }
 
         private static Query AccountToQuery(Account acc)
