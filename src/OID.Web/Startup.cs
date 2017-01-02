@@ -32,11 +32,11 @@ namespace OID.Web
         {
             services.AddDistributedMemoryCache();
             services.AddSession(s => s.IdleTimeout = new TimeSpan(0, 1, 0, 0));
-            services.AddSingleton<IAuthorizationHandler, HasSessionHandler>();
             services.AddAuthorization(o =>
             {
                 o.AddPolicy("HasSessionID", p => p.Requirements.Add(new SessionRequirement()));
             });
+            services.AddSingleton<IAuthorizationHandler, HasSessionHandler>();
             services.AddMvc();
 
             var containerBuilder = new ContainerBuilder();
@@ -70,7 +70,10 @@ namespace OID.Web
             app.UseSession();
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
-                AuthenticationScheme = "SessionId"
+                AuthenticationScheme = "SessionId",
+                LoginPath = "/User/Login",
+                AccessDeniedPath = "/User/Login",
+                AutomaticAuthenticate = true
             });
 
             app.UseOIDAuthroziation();

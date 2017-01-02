@@ -10,6 +10,11 @@ namespace OID.Web.Authenticate
             if (context.User.HasClaim(c => c.Type == "SessionId"))
             {
                 context.Succeed(requirement);
+
+            }
+            else
+            {
+                context.Fail();
             }
 
             return Task.CompletedTask;

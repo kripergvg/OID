@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using OID.DataProvider.Interfaces;
@@ -19,6 +20,7 @@ using OID.Web.Models.User;
 
 namespace OID.Web.Controllers
 {
+    [Authorize("HasSessionID")]
     public class DealController : OIDController
     {
         private readonly IDealProvider _dealProvider;
@@ -41,7 +43,7 @@ namespace OID.Web.Controllers
             var deals = await _dealProvider.GetDeals();
             if (deals.ResultMessage.MessageType != MessageType.Error)
             {
-                var model = _mapper.Map<List<DealViewModel>>(deals.Model);
+                var model = _mapper.Map<List<ItemDealViewModel>>(deals.Model);
                 return View(model);
             }
             else
@@ -195,10 +197,77 @@ namespace OID.Web.Controllers
 
         public async Task<IActionResult> ViewDeal(int dealId)
         {
-            return View();
+            var dealTask = _dealProvider.GetDeal(dealId);
+            var deliveryTask = _dealProvider.GetDealDelevery(dealId);
+            var objectsTask = _dealObjectProvider.GetDealObjects(dealId);
+            var paymentsTask = _dealProvider.GetDealPayments(dealId);
+            var cheksTask = _dealObjectProvider.GetChecksFromDeal(dealId);
+
+            await Task.WhenAll(dealTask, deliveryTask, objectsTask, paymentsTask, cheksTask);
+
+            var deal = dealTask.Result.Model;
+            var delivery = deliveryTask.Result.Model;
+            var objects = objectsTask.Result.Model;
+            var checks = cheksTask.Result.Model;
+
+            var objectsWithChecks = new List<ViewDealModel.DealObject>();
+            foreach (var dealObject in objects)
+            {
+                var dealChecks = new List<ViewDealModel.DealObject.ObjectCheck>();
+                foreach (var check in checks.Where(ch => ch.ObjectId == dealObject.ObjectId))
+                {
+                    dealChecks.Add(new ViewDealModel.DealObject.ObjectCheck
+                    {
+                        Description = check.Task
+                    });
+                }
+
+                objectsWithChecks.Add(new ViewDealModel.DealObject
+                {
+                    ObjectId = dealObject.ObjectId,
+                    CheckListId = dealObject.CheckListId,
+                    ObjectName = dealObject.ObjectName,
+                    AcceptedByMe = dealObject.IsApprovedByMe,
+                    AcceptedByPartner = dealObject.IsApprovedByPartner,
+                    ObjectChecks = dealChecks,
+                    DealObjectId = dealObject.DealObjectId
+                });
+            }
+
+            var model = new ViewDealModel
+            {
+                Size = delivery.SizeDeclire,
+                DealId = deal.DealId,
+                Price = deal.Price,
+                Weight = delivery.WeightDeclire,
+                Comment = deal.Comment,
+                BuyerName = delivery.BuyerUserName,
+                SellerName = delivery.SellerUserName,
+                DeliveryTypeName = delivery.DeliveryCptyServiceName,
+                DealObjects = objectsWithChecks,
+                AcceptedByMe = deal.IsApprovedByMe,
+                AcceptedByPartner = deal.IsApprovedByParner,
+                IsBlocked = deal.Blocked,
+                DealType = deal.DealType,
+                IsAccepted = deal.IsAccepted
+            };
+
+            return View(model);
         }
 
-        //public async Task<IActionResult> UpdateBuy()
+        [HttpPost]
+        public async Task<IActionResult> ApproveObject(int dealObjectId, string returnUrl)
+        {
+            await _dealObjectProvider.Approve(dealObjectId);
+            return LocalRedirect(returnUrl);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ApproveDeal(int dealId, string returnUrl)
+        {
+            await _dealProvider.Approve(dealId);
+            return LocalRedirect(returnUrl);
+        }
 
         private async Task<DealModifyModel> CreateDealModifyModel(DealType dealType)
         {

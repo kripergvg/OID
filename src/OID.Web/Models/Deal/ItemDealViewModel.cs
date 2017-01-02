@@ -3,7 +3,7 @@ using OID.DataProvider.Models.Deal;
 
 namespace OID.Web.Models.Deal
 {
-    public class DealViewModel
+    public class ItemDealViewModel
     {
         public string Objects { get; set; }
 

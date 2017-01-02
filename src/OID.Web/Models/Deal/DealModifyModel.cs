@@ -32,6 +32,7 @@ namespace OID.Web.Models.Deal
         [Display(Name = "Вес")]
         public int Weight { get; set; }
 
+        [Display(Name = "Размеры")]
         public Size Size { get; set; }
 
         public AddressViewModel AddressModel { get; set; }

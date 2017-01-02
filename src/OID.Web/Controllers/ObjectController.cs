@@ -117,7 +117,7 @@ namespace OID.Web.Controllers
             {
                 var checks = model
                     .ObjectChecks
-                    .Select(c => new DealCheck(((int) c.CheckType).ToString(), c.Description, c.CheckId))
+                    .Select(c => new DealCheck(((int) c.CheckType).ToString(), c.Description,c.CheckId))
                     .ToList();
 
                 var checksToAdd = checks
@@ -131,7 +131,9 @@ namespace OID.Web.Controllers
                 var oldChecks = await _dealObjectProvider.GetChecks(checkListId);
                 var oldChecksIds = oldChecks.Model.Select(c => c.CheckId);
 
-                var checksToDelete = oldChecksIds.Where(c => !checksIds.Contains(c)).ToList();
+                var checksToDelete = oldChecksIds.Where(c => !checksIds.Contains(c.ToString()))
+                    .Select(c => c.ToString())
+                    .ToList();
                 var deleteChecksTask = _dealObjectProvider.DeleteChecks(checksToDelete, checkListId, objectID);
 
                 var updateObjectModel = new UpdateDealObject(objectID, model.CategoryCode, ((int) model.ObjectStatusType).ToString(), model.Name, model.Description);

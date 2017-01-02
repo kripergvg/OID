@@ -24,7 +24,7 @@ namespace OID.SoapDataProvider.Providers.Infrastructure
         public async Task<SessionQueryResult> Execute(List<Query> existedQueries)
         {
             var userModel = _userManager.GetUser();
-
+ 
             foreach (var existedQuery in existedQueries)
             {
                 existedQuery.Parameters.Add(new QueryParameter("in", "Session_Id", userModel.SessionId, SqlDbType.NVarChar));

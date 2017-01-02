@@ -11,7 +11,7 @@ namespace OID.DataProvider.Interfaces
     {
         //Task<DataProviderModel<UpsertObjectModel>> Upsert(DealObject dealObject);
 
-        Task<DataProviderVoidModel> Approve(string dealId);
+        Task<DataProviderVoidModel> Approve(int dealObjectId);
 
         Task<DataProviderModel<List<UserObject>>> GetUserObjects(bool onlyNotBlocked = false, DealType? dealType = null);
 
@@ -32,5 +32,7 @@ namespace OID.DataProvider.Interfaces
         Task<DataProviderVoidModel> DeleteObject(string objectId);
 
         Task<DataProviderModel<List<DealObject>>> GetDealObjects(int dealId);
+
+        Task<DataProviderModel<List<DealObjectCheck>>> GetChecksFromDeal(int dealId);
     }
 }

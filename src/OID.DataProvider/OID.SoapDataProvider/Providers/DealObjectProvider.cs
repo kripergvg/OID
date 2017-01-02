@@ -109,13 +109,13 @@ namespace OID.SoapDataProvider.Providers
         //    return model;
         //}
 
-        public async Task<DataProviderVoidModel> Approve(string dealId)
+        public async Task<DataProviderVoidModel> Approve(int dealObjectId)
         {
             List<Query> listQuery = new List<Query>();
 
             string q1_guid = Guid.NewGuid().ToString();
             Query q1 = new Query(q1_guid, "DealObjectApprove");
-            q1.Parameters.Add(new QueryParameter("in", "DealObject_Id", dealId, SqlDbType.Int));
+            q1.Parameters.Add(new QueryParameter("in", "DealObject_Id", dealObjectId.ToString(), SqlDbType.Int));
             q1.Parameters.Add(new QueryParameter("in", "Approve", "Y", SqlDbType.NVarChar));
             listQuery.Add(q1);
 
@@ -307,15 +307,65 @@ namespace OID.SoapDataProvider.Providers
 
         public async Task<DataProviderModel<List<CheckListItem>>> GetChecks(string checkListId)
         {
+            return await GetChecks(Int32.Parse(checkListId), null, "GetChecks_FromCheckList");
+        }
+
+        public async Task<DataProviderModel<List<DealObjectCheck>>> GetChecksFromDeal(int dealId)
+        {
             var queryIdentifier1 = Guid.NewGuid().ToString();
-            var query1 = new Query(queryIdentifier1, "GetChecks_FromCheckList");
-            query1.Parameters.Add(new QueryParameter("in", "CheckList_Id", checkListId));
+            Query query1 = new Query(queryIdentifier1, "GetChecks_FromDeal");
+            query1.Parameters.Add(new QueryParameter("in", "Deal_Id", dealId.ToString()));
+            
+            var listQuery = new List<Query> { query1 };
+
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
+
+            var getChecksQuery = result.Queries.FirstOrDefault(q => q.Name == "GetChecks_FromDeal");
+
+            var cheks = new List<DealObjectCheck>();
+            if (getChecksQuery != null)
+            {
+                var dataTable = getChecksQuery.RetTable;
+
+                foreach (DataRow objectRow in dataTable.Rows)
+                {
+                    cheks.Add(new DealObjectCheck(
+                        objectRow["Check_Id"].GetInt(),
+                        objectRow["CheckList_Id"].GetInt(),
+                        objectRow["Task"].ToString(),
+                        _soapParser.ParseCheckType(objectRow["CheckType_Id"]),
+                        objectRow["CheckComment"].ToString(),
+                        objectRow["CheckLink"].ToString(),
+                        objectRow["CreateDate"].GetDateTime(),
+                        objectRow["ChangeDate"].GetDateTime(),
+                        _soapParser.BoolParse(objectRow["Blocked"]),
+                        _soapParser.ParseCheckStatus(objectRow["CheckStatus_Id"]),
+                        objectRow["Object_Id"].GetInt()));
+                }
+            }
+
+            return new DataProviderModel<List<DealObjectCheck>>(result.ResultMessage, cheks);
+        }
+
+        private async Task<DataProviderModel<List<CheckListItem>>> GetChecks(int? checkListId, int? dealId, string serviceName)
+        {
+            var queryIdentifier1 = Guid.NewGuid().ToString();
+            Query query1 = new Query(queryIdentifier1, serviceName);
+            if (checkListId.HasValue)
+            {
+                query1.Parameters.Add(new QueryParameter("in", "CheckList_Id", checkListId.ToString()));
+            }
+
+            if (dealId.HasValue)
+            {
+                query1.Parameters.Add(new QueryParameter("in", "Deal_Id", dealId.ToString()));
+            }
 
             var listQuery = new List<Query> { query1 };
 
             var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
 
-            var getChecksQuery = result.Queries.FirstOrDefault(q => q.Name == "GetChecks_FromCheckList");
+            var getChecksQuery = result.Queries.FirstOrDefault(q => q.Name == serviceName);
 
             var cheks = new List<CheckListItem>();
             if (getChecksQuery != null)
@@ -325,11 +375,15 @@ namespace OID.SoapDataProvider.Providers
                 foreach (DataRow objectRow in dataTable.Rows)
                 {
                     cheks.Add(new CheckListItem(
-                        objectRow["Check_Id"].ToString(),
-                        objectRow["CheckList_Id"].ToString(),
+                        objectRow["Check_Id"].GetInt(),
+                        objectRow["CheckList_Id"].GetInt(),
                         objectRow["Task"].ToString(),
-                        (CheckType) Int32.Parse(objectRow["CheckType_Id"].ToString()),
-                        objectRow["CheckComment"].ToString()));
+                        _soapParser.ParseCheckType(objectRow["CheckType_Id"]),
+                        objectRow["CheckComment"].ToString(),
+                        objectRow["CheckLink"].ToString(),
+                        objectRow["CreateDate"].GetDateTime(),
+                        objectRow["ChangeDate"].GetDateTime(),
+                        _soapParser.BoolParse(objectRow["Blocked"])));
                 }
             }
 
@@ -338,6 +392,8 @@ namespace OID.SoapDataProvider.Providers
 
         public async Task<DataProviderModel<UserObject>> GetUserObject(string objectID)
         {
+            // TODO можно филтровать на стороне сервиса 
+            //    qpl.Add(new QueryParameter("in", "Deal_Id", model.Deal_Id));
             var userObjects = await GetUserObjects();
             return new DataProviderModel<UserObject>(userObjects.ResultMessage, userObjects.Model.FirstOrDefault(o => o.ObjectId == objectID));
         }

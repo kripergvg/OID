@@ -20,7 +20,7 @@ namespace OID.Web.Core.MappingProfiles
             CreateMap<CheckListItem, ObjectModifyViewModel.ObjectCheck>()
                 .ForMember(d => d.CheckType, s => s.MapFrom(src => (CheckType) src.CheckType))
                 .ForMember(d => d.Description, s => s.MapFrom(src => src.Task));
-            CreateMap<DealModel, DealViewModel>();
+            CreateMap<DealModel, ItemDealViewModel>();
             CreateMap<DealObject, SelectedDealObject>()
                 .ForMember(d => d.Name, s => s.MapFrom(src => src.ObjectName));
         }

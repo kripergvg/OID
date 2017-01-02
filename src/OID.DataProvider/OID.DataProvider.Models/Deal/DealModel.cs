@@ -16,6 +16,7 @@ namespace OID.DataProvider.Models.Deal
             bool isApprovedBySeller,
             bool isApprovedByBuyer, 
             bool isApprovedByMe,
+            bool isApprovedByParner,
             bool isAccepted,
             double price,
             int liveTimeInHours,
@@ -42,6 +43,7 @@ namespace OID.DataProvider.Models.Deal
             IsApprovedBySeller = isApprovedBySeller;
             IsApprovedByBuyer = isApprovedByBuyer;
             IsApprovedByMe = isApprovedByMe;
+            IsApprovedByParner = isApprovedByParner;
             IsAccepted = isAccepted;
             Price = price;
             LiveTimeInHours = liveTimeInHours;
@@ -79,6 +81,8 @@ namespace OID.DataProvider.Models.Deal
         public bool IsApprovedByBuyer { get; set; }
 
         public bool IsApprovedByMe { get; set; }
+
+        public bool IsApprovedByParner { get; set; }
 
         public bool IsAccepted { get; set; }
 

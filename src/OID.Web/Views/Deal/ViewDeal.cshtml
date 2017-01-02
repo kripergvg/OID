@@ -1,0 +1,123 @@
+﻿@using System.Threading.Tasks
+@using OID.DataProvider.Models.Deal
+@using OID.Web.Models.Deal
+@model OID.Web.Models.Deal.ViewDealModel
+
+@if (!Model.IsAccepted)
+{
+    <div class="alert alert-warning info-block-many" role="alert">Сделка еще не принята партнером</div>
+}
+
+@if (Model.AcceptedByPartner)
+{
+    <div class="alert alert-success info-block-many" role="alert">Подтверждено партнером</div>
+}
+else if (Model.IsAccepted)
+{
+    <div class="alert alert-warning info-block-many" role="alert">Ожидается подтверждение от партнера</div>
+}
+
+@if (Model.AcceptedByMe)
+{
+    <div class="alert alert-success info-block-many" role="alert">Подтверждено мной</div>
+}
+
+
+<div class="row" style="margin-top: 20px;">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label asp-for="DealId"></label>
+            <input asp-for="DealId" disabled="disabled" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Price"></label>
+            <input asp-for="Price" disabled="disabled" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Comment"></label>
+            <textarea asp-for="Comment" disabled="disabled" class="form-control"></textarea>
+        </div>
+        <div class="form-group">
+            <label asp-for="SellerName"></label>
+            <input asp-for="SellerName" disabled="disabled" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="BuyerName"></label>
+            <input asp-for="BuyerName" disabled="disabled" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="DeliveryTypeName"></label>
+            <input asp-for="DeliveryTypeName" disabled="disabled" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Weight"></label>
+            <input asp-for="Weight" disabled="disabled" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Size" style="display: block"></label>
+            <input asp-for="Size.Height" style="display: inline; width: 65px;" disabled="disabled" class="form-control" />
+            <input asp-for="Size.Width" style="display: inline;width: 65px;" disabled="disabled" class="form-control" />
+            <input asp-for="Size.Length" style="display: inline;width: 65px;" disabled="disabled" class="form-control" />
+        </div>
+        <div>
+            @if (!Model.IsBlocked || (Model.DealObjects.All(o => o.AcceptedByMe && o.AcceptedByPartner) && !Model.AcceptedByMe))
+            {
+
+                <div class="form-group">
+                    @if (!Model.IsBlocked)
+                    {
+                        <a asp-action="@(Model.DealType == DealType.Buy ? "UpdateBuy" : "UpdateSell")" class="btn btn-info" asp-route-dealId="@Model.DealId">Редактировать</a>
+                    }
+
+                    @if (Model.DealObjects.All(o => o.AcceptedByMe && o.AcceptedByPartner) && !Model.AcceptedByMe)
+                    {
+                        <form asp-action="ApproveDeal" asp-route-dealId="@Model.DealId" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" style="display: inline">
+                            <button class="btn btn-success" type="submit">Подтвердить</button>
+                        </form>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-md-9">
+        @foreach (var dealObject in Model.DealObjects)
+        {
+            <div class="panel panel-info">
+                <div class="panel-heading"> <a asp-controller="Object" asp-action="Update" asp-route-objectID="@dealObject.ObjectId" asp-route-checkListId="@dealObject.CheckListId">@dealObject.ObjectName</a></div>
+
+                <div class="panel-body">
+                    @foreach (var objectCheck in dealObject.ObjectChecks)
+                    {
+                        <div class="deal_check">
+                            <div>
+                                <p>@objectCheck.Description</p>
+                                <img src="@objectCheck.ImageUrl" />
+                            </div>
+                        </div>
+                    }
+
+                    @if (dealObject.AcceptedByPartner)
+                    {
+                        <span class="label  label-success">Подтверждено партнером</span>
+                    }
+                    else
+                    {
+                        <span class="label  label-warning ">Ожидается подтверждение от партнера</span>
+                    }
+
+                    @if (dealObject.AcceptedByMe)
+                    {
+                        <span class="label  label-success">Подтверждено мной</span>
+                    }
+                    else
+                    {
+                        <form asp-action="ApproveObject" asp-route-dealObjectId="@dealObject.DealObjectId" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString">
+                            <button class="btn btn-success btn-sm" type="submit" style="display: block">Подтвердить</button>
+                        </form>
+
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

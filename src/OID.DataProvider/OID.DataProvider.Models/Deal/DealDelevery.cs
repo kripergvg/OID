@@ -8,7 +8,8 @@ namespace OID.DataProvider.Models.Deal
         public DealDelevery(int dealId, int deliveryCptyServiceId, string deliveryCptyServiceName, Size sizeDeclire, Size sizeFact, int weightDeclire, int? weightFact,
             int? trackingNumber, double? deliveryPriceCalculated, double? deliveryPriceFact, double? insurancePriceCalculated, double? insurancePriceFact, string address,
             string addressFrom, string addressTo, string cityCodeFrom, string cityCodeTo, string cityCode, string localityCode, string regionCode,
-            DeleveryLocationType deleveryLocationType, DateTime createDate, DateTime changeDate, string currencyCode, bool blocked)
+            DeleveryLocationType deleveryLocationType, DateTime createDate, DateTime changeDate, string currencyCode, bool blocked,string buyerUserName,
+            string sellerUserName)
         {
             DealId = dealId;
             DeliveryCptyServiceId = deliveryCptyServiceId;
@@ -35,6 +36,8 @@ namespace OID.DataProvider.Models.Deal
             ChangeDate = changeDate;
             CurrencyCode = currencyCode;
             Blocked = blocked;
+            BuyerUserName = buyerUserName;
+            SellerUserName = sellerUserName;
         }
 
         public int DealId { get; set; }
@@ -87,6 +90,8 @@ namespace OID.DataProvider.Models.Deal
 
         public bool Blocked { get; set; }
 
+        public string BuyerUserName { get; set; }
 
+        public string SellerUserName { get; set; }
     }
 }

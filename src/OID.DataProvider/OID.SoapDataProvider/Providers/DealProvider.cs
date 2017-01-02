@@ -29,21 +29,6 @@ namespace OID.SoapDataProvider.Providers
             _appQueryExecutorDecorator = appQueryExecutorDecorator;
         }
 
-        public async Task<DataProviderVoidModel> Approve(string dealId)
-        {
-            var listQuery = new List<Query>();
-
-            var q1_guid = Guid.NewGuid().ToString();
-            var q1 = new Query(q1_guid, "DealApprove");
-            q1.Parameters.Add(new QueryParameter("in", "Deal_Id", dealId, SqlDbType.Int));
-            q1.Parameters.Add(new QueryParameter("in", "Approve", "Y", SqlDbType.NVarChar));
-            listQuery.Add(q1);
-
-            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
-
-            return new DataProviderVoidModel(result.ResultMessage);
-        }
-
         public async Task<DataProviderVoidModel> Leave(string dealId)
         {
             var listQuery = new List<Query>();
@@ -189,6 +174,7 @@ namespace OID.SoapDataProvider.Providers
                         _soapParser.BoolParse(objectRow["IsApprovedBySeller"]),
                         _soapParser.BoolParse(objectRow["IsApprovedByBuyer"]),
                         _soapParser.BoolParse(objectRow["IsApprovedByMe"]),
+                        _soapParser.BoolParse(objectRow["IsApprovedByPartner"]),
                         _soapParser.BoolParse(objectRow["IsAccepted"]),
                         objectRow["Price"].GetDouble(),
                         objectRow["LiveTimeInHours"].GetInt(),
@@ -283,7 +269,9 @@ namespace OID.SoapDataProvider.Providers
                 row["CreateDate"].GetDateTime(),
                 row["ChangeDate"].GetDateTime(),
                 row["Currency_Code"].ToString(),
-                _soapParser.BoolParse(row["Blocked"])));
+                _soapParser.BoolParse(row["Blocked"]),
+                row["BuyerUser_Name"].ToString(),
+                row["SellerUser_Name"].ToString()));
         }
 
         public async Task<DataProviderModel<List<DeleveryType>>> GetDeleveryTypes()
@@ -418,6 +406,71 @@ namespace OID.SoapDataProvider.Providers
             return new DataProviderModel<CreateDealModel>(result.ResultMessage, createDealModel);
         }
 
+        public async Task<DataProviderModel<List<DealPayment>>> GetDealPayments(int dealId)
+        {
+            var queryIdentifier1 = Guid.NewGuid().ToString();
+            var query1 = new Query(queryIdentifier1, "GetDealPayments")
+            {
+                Parameters = new List<QueryParameter>
+                {
+                    new QueryParameter("in", "Deal_Id", dealId.ToString())
+                }
+            };
+
+            var listQuery = new List<Query> { query1 };
+
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
+
+            var getDealPaymentsQuery = result.Queries.First(q => q.Name == "GetDealPayments");
+
+            var dealPayments = new List<DealPayment>();
+            if (getDealPaymentsQuery != null)
+            {
+                var dataTable = getDealPaymentsQuery.RetTable;
+
+                foreach (DataRow objectRow in dataTable.Rows)
+                {
+                    var direction = objectRow["Direction_Id"].ToString() == "1" ? Direction.Direction1 : Direction.Direction2;
+
+                    dealPayments.Add(new DealPayment(
+                        objectRow["DealPayment_Id"].GetInt(),
+                        objectRow["ParentDealPayment_Id"].GetNullableInt(),
+                        _soapParser.BoolParse(objectRow["isParentDealExecuted"].ToString()),
+                        direction,
+                        objectRow["Payment_Id"].GetInt(),
+                        objectRow["SourcePayment_Id"].GetNullableInt(),
+                        objectRow["CptyService_Id"].GetNullableInt(),
+                        objectRow["Amount"].GetDouble(),
+                        objectRow["Date"].GetNullableDateTime(),
+                        objectRow["TransactionNum"].ToString(),
+                        _soapParser.ParsePaymentStatus(objectRow["PaymentStatus_Code"]),
+                        _soapParser.ParsePaymentOperation(objectRow["PaymentOperationType_Code"]),
+                        _soapParser.ParseDealService(objectRow["Service_Code"]),
+                        objectRow["Currency_Code"].ToString(),
+                        objectRow["CreateDate"].GetDateTime(),
+                        _soapParser.BoolParse(objectRow["IsMyPayment"]),
+                        objectRow["AccountNumber_From"].ToString(),
+                        objectRow["AccountNumber_To"].ToString()));
+                }
+            }
+
+            return new DataProviderModel<List<DealPayment>>(result.ResultMessage, dealPayments);
+        }
+
+        public async Task<DataProviderVoidModel> Approve(int dealId)
+        {
+            List<Query> listQuery = new List<Query>();
+
+            string q1_guid = Guid.NewGuid().ToString();
+            Query q1 = new Query(q1_guid, "DealApprove");
+            q1.Parameters.Add(new QueryParameter("in", "Deal_Id", dealId.ToString(), SqlDbType.Int));
+            q1.Parameters.Add(new QueryParameter("in", "Approve", "Y", SqlDbType.NVarChar));
+            listQuery.Add(q1);
+
+            var result = await _sessionQueryExecutor.Execute(listQuery).ConfigureAwait(false);
+
+            return new DataProviderVoidModel(result.ResultMessage);
+        }
     }
 }
 

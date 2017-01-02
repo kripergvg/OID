@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -33,6 +34,11 @@ namespace OID.Web.Authenticate
 
                 var claims = new ClaimsPrincipal(claimsIdentity);
                 await context.Authentication.SignInAsync("SessionId", claims);
+            }
+            else if (context.User.HasClaim(c => c.Type == "SessionId"))
+            {
+                var claim = context.User.Claims.Single(c => c.Type == "SessionId");
+                ((ClaimsIdentity) context.User.Identity).RemoveClaim(claim);
             }
 
             await _next.Invoke(context);

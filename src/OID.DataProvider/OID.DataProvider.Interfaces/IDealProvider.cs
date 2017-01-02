@@ -8,8 +8,6 @@ namespace OID.DataProvider.Interfaces
 {
     public interface IDealProvider
     {
-        Task<DataProviderVoidModel> Approve(string dealId);
-
         Task<DataProviderVoidModel> Leave(string dealId);
 
         Task<DataProviderVoidModel> UpdateDelevery(DeleveryUpdateModel deleveryModel);
@@ -27,5 +25,9 @@ namespace OID.DataProvider.Interfaces
         Task<DataProviderVoidModel> UpdateDeal(DealUpdateModel updateModel, DealType dealType);
 
         Task<DataProviderModel<CreateDealModel>> CreateDeal(DealCreateModel createModel, DealType dealType);
+
+        Task<DataProviderModel<List<DealPayment>>> GetDealPayments(int dealId);
+
+        Task<DataProviderVoidModel> Approve(int dealId);
     }
 }
